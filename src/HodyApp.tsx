@@ -45,11 +45,14 @@ import {
   setAvailability,
   type ApiUser,
   type ChronicleEvent,
+  type DanceLevel,
+  type Gender,
   type InteractionRecord,
   type PendingShot,
   type ShotLeaderboardRow,
 } from './api'
 import { compressProfilePhoto } from './photo'
+import './profile-facts.css'
 
 const INVITE_BASE = 'https://vranovicke-hody-2026.michaelmilis98.workers.dev/'
 const PERSON_SECONDS = 5 * 60
@@ -77,6 +80,17 @@ const QUESTION_SETS = [
   ],
 ]
 
+const GENDER_LABELS: Record<Gender, string> = {
+  male: 'Šohaj',
+  female: 'Děvčica',
+}
+
+const DANCE_LABELS: Record<DanceLevel, string> = {
+  pro: 'Mazák od muziky',
+  amateur: 'Dvě levé v čižmách',
+  wild: 'Tož to nějak odskáču',
+}
+
 type Screen = 'home' | 'people' | 'chronicle' | 'interactions' | 'game' | 'profile'
 type EntryMode = 'welcome' | 'register' | 'login' | 'app'
 
@@ -103,6 +117,14 @@ function formatStamp(value: string) {
   const parsed = new Date(`${value.replace(' ', 'T')}Z`)
   if (Number.isNaN(parsed.getTime())) return value
   return new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }).format(parsed)
+}
+
+function genderLabel(user: ApiUser) {
+  return user.gender ? GENDER_LABELS[user.gender] : 'Zatím tají'
+}
+
+function danceLabel(user: ApiUser) {
+  return user.dance_level ? DANCE_LABELS[user.dance_level] : 'Taneční pověst neznámá'
 }
 
 function Avatar({ user, size = 'normal' }: { user: Pick<ApiUser, 'display_name' | 'profile_photo_data'>; size?: 'small' | 'normal' | 'hero' }) {
@@ -133,6 +155,15 @@ function PageHeader({ eyebrow, title, copy }: { eyebrow: string; title: string; 
   )
 }
 
+function ProfileFacts({ user, compact = false }: { user: ApiUser; compact?: boolean }) {
+  return (
+    <div className={`v3-profile-facts${compact ? ' compact' : ''}`}>
+      <span><strong>{genderLabel(user)}</strong><small>co seš zač</small></span>
+      <span><strong>{danceLabel(user)}</strong><small>jak sa vrtíš</small></span>
+    </div>
+  )
+}
+
 function WelcomeScreen({ inviter, onRegister, onLogin }: { inviter: string; onRegister: () => void; onLogin: () => void }) {
   return (
     <section className="entry-screen v2-entry">
@@ -160,6 +191,8 @@ function RegisterScreen({ inviter, onBack, onDone }: { inviter: string; onBack: 
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [bio, setBio] = useState('')
+  const [gender, setGender] = useState<Gender | ''>('')
+  const [danceLevel, setDanceLevel] = useState<DanceLevel | ''>('')
   const [photo, setPhoto] = useState('')
   const [photoBusy, setPhotoBusy] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -182,7 +215,7 @@ function RegisterScreen({ inviter, onBack, onDone }: { inviter: string; onBack: 
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (busy || photoBusy || name.trim().length < 2 || password.length < 4 || !photo) return
+    if (busy || photoBusy || name.trim().length < 2 || password.length < 4 || !photo || !gender || !danceLevel) return
     setBusy(true)
     setError('')
     try {
@@ -191,6 +224,8 @@ function RegisterScreen({ inviter, onBack, onDone }: { inviter: string; onBack: 
         password,
         bio: bio.trim(),
         profile_photo_data: photo,
+        gender,
+        dance_level: danceLevel,
         ref: inviter || undefined,
       })
       onDone(result.user)
@@ -209,10 +244,32 @@ function RegisterScreen({ inviter, onBack, onDone }: { inviter: string; onBack: 
         <FolkRosette />
         <p className="eyebrow">Nový kus do party</p>
         <h1>Hoď sa mezi nás.</h1>
-        <p className="form-intro">Méno, heslo aspoň na čtyři znaky a fotka. Bez fotky by pak půl kroniky vypadalo jak evidence svědků.</p>
+        <p className="form-intro">Méno, heslo aspoň na čtyři znaky, fotka a dvě důležité společenské diagnózy. Ať víme, co s tebú na parketu.</p>
         <form onSubmit={submit} className="entry-form">
           <label><span>Jak ti máme říkat</span><input value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={40} placeholder="Třeba Martin" required /></label>
           <label><span>Heslo · minimálně 4 znaky</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={4} maxLength={128} placeholder="1234 klidně stačí" required /></div></label>
+
+          <div className="v3-registration-facts">
+            <label>
+              <span>Co seš zač</span>
+              <select value={gender} onChange={(event) => setGender(event.target.value as Gender | '')} required>
+                <option value="">Vyber sa</option>
+                <option value="male">Šohaj</option>
+                <option value="female">Děvčica</option>
+              </select>
+            </label>
+            <label>
+              <span>Jak seš na tom s tancem</span>
+              <select value={danceLevel} onChange={(event) => setDanceLevel(event.target.value as DanceLevel | '')} required>
+                <option value="">Přiznaj barvu</option>
+                <option value="pro">Mazák od muziky</option>
+                <option value="amateur">Dvě levé v čižmách</option>
+                <option value="wild">Tož to nějak odskáču</option>
+              </select>
+            </label>
+          </div>
+          <p className="v3-dance-help">Poslední možnost znamená: nevíš přesně co děláš, ale rozhodně tě to nezastaví.</p>
+
           <label><span>Co o tobě vědět <em>nemusíš nic</em></span><textarea value={bio} onChange={(event) => setBio(event.target.value)} maxLength={120} placeholder="Když mě nenajdeš, su asi..." /></label>
           <label className={`v2-photo-required${photo ? ' ready' : ''}`}>
             {photo ? <img src={photo} alt="Náhled profilové fotky" /> : <Camera size={28} />}
@@ -221,7 +278,7 @@ function RegisterScreen({ inviter, onBack, onDone }: { inviter: string; onBack: 
           </label>
           {inviter && <p className="v2-inline-note"><UserPlus size={16} /> Pozvánka je od: <strong>{inviter}</strong></p>}
           {error && <p className="entry-error" role="alert">{error}</p>}
-          <button className="entry-primary" type="submit" disabled={busy || photoBusy || !photo}><PartyPopper size={20} /> {busy ? 'Zapisuju tě do kroniky…' : 'Tož su na hodech!'}</button>
+          <button className="entry-primary" type="submit" disabled={busy || photoBusy || !photo || !gender || !danceLevel}><PartyPopper size={20} /> {busy ? 'Zapisuju tě do kroniky…' : 'Tož su na hodech!'}</button>
         </form>
       </div>
     </section>
@@ -276,7 +333,7 @@ function LoginScreen({ onBack, onDone }: { onBack: () => void; onDone: (user: Ap
           {loading ? <p className="login-empty"><LoaderCircle className="v2-spin" size={18} /> Lovím lidi z databázy…</p> : users.length ? (
             <>
               <label><span>Vyber svoje méno</span><select value={selected} onChange={(event) => setSelected(event.target.value)}>{users.map((user) => <option key={user.id}>{user.display_name}</option>)}</select></label>
-              {chosen && <div className="v2-login-person"><Avatar user={chosen} /><div><strong>{chosen.display_name}</strong><p>{chosen.bio || 'O sobě zatím drží bobříka mlčení.'}</p></div></div>}
+              {chosen && <div className="v2-login-person"><Avatar user={chosen} /><div><strong>{chosen.display_name}</strong><p>{chosen.bio || 'O sobě zatím drží bobříka mlčení.'}</p><ProfileFacts user={chosen} compact /></div></div>}
               <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={4} maxLength={128} placeholder="Aspoň 4 znaky" required /></div></label>
             </>
           ) : <p className="login-empty">Nikdo tu eště není. Tož budeš první.</p>}
@@ -393,7 +450,7 @@ function HomeScreen({ me, people, preferredTargetId, onPickTarget }: { me: ApiUs
       <article className="person-card v2-person-card">
         <div className="card-ribbon"><span>TEĎ TI PADL</span><span>HODY 2026</span></div>
         <div className="v2-hero-photo"><Avatar user={person} size="hero" /></div>
-        <div className="person-copy"><p className="eyebrow">Tož sa seznam</p><h2>{person.display_name}</h2><p className="person-note">{person.bio || 'O sobě zatím nic nevyklopil.'}</p></div>
+        <div className="person-copy"><p className="eyebrow">Tož sa seznam</p><h2>{person.display_name}</h2><p className="person-note">{person.bio || 'O sobě zatím nic nevyklopil.'}</p><ProfileFacts user={person} compact /></div>
 
         {!done ? (
           <div className="v2-question-zone">
@@ -458,6 +515,7 @@ function PeopleScreen({ me, people, onPick }: { me: ApiUser; people: ApiUser[]; 
             <div className="person-tile-body">
               <div className="person-title-row"><h2>{user.display_name}</h2><span className={`v2-availability ${user.is_available ? '' : 'quiet'}`}>{user.is_available ? 'na place' : 'Neotravuj'}</span></div>
               <p>{user.bio || 'Nic na sebe zatím nepráskl.'}</p>
+              <ProfileFacts user={user} compact />
               <div className="v2-tile-actions">
                 <button className="mini-button" type="button" onClick={() => onPick(user.id)}>Nahodit otázky <ChevronRight size={15} /></button>
                 <button className="mini-button" type="button" onClick={() => sendShot(user)}><GlassWater size={15} /> Panák</button>
@@ -648,8 +706,8 @@ function ProfileScreen({ me, onMeChanged, onLogout }: { me: ApiUser; onMeChanged
 
   return (
     <section className="screen">
-      <PageHeader eyebrow="Tvoje místo" title="Ty sám" copy="Fotka, stav a verbovací QR. Nic víc člověk k důstojnému životu údajně nepotřebuje." />
-      <article className="profile-card v2-profile-card"><Avatar user={me} size="hero" /><div className="profile-copy"><p className="eyebrow">Som na hodech</p><h2>{me.display_name}</h2><p>{me.bio || 'O sobě zatím nic nepráskls.'}</p></div></article>
+      <PageHeader eyebrow="Tvoje místo" title="Ty sám" copy="Fotka, taneční pověst, stav a verbovací QR. Veškerá nutná hodová administrativa na jednom místě." />
+      <article className="profile-card v2-profile-card"><Avatar user={me} size="hero" /><div className="profile-copy"><p className="eyebrow">Som na hodech</p><h2>{me.display_name}</h2><p>{me.bio || 'O sobě zatím nic nepráskls.'}</p><ProfileFacts user={me} /></div></article>
       <button className={`quiet-card${quiet ? ' quiet-on' : ''}`} type="button" onClick={toggleQuiet}><span className="quiet-icon">{quiet ? <Moon size={22} /> : <PartyPopper size={22} />}</span><div><strong>{quiet ? 'Neotravuj' : 'Som ve hře'}</strong><p>{quiet ? 'Náhodně tě teď ostatním neházíme.' : 'Možeš padnút komukoli na hlavní obrazovce.'}</p></div><span className="toggle"><i /></span></button>
       <article className="v2-qr-card">
         <div><p className="eyebrow">Dotáhni dalšího</p><h2>Tvoje verbovací cedula</h2><p>Kdo načte tenhle QR, přistane na normální registraci s tvým ménem v odkazu. Když sa fakt přidá, Kronika tě práskne.</p><button className="primary-button" type="button" onClick={shareInvite}><Share2 size={18} /> Poslat pozvánku</button></div>
