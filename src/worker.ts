@@ -1,8 +1,8 @@
 const SESSION_COOKIE = 'hody_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
-const PBKDF2_ITERATIONS = 600_000
+const PBKDF2_ITERATIONS = 10_000
 const PASSWORD_MIN_LENGTH = 4
-const PASSWORD_MAX_LENGTH = 5
+const PASSWORD_MAX_LENGTH = 128
 
 interface D1Result<T = Record<string, unknown>> {
   success: boolean
@@ -62,7 +62,7 @@ function json(data: unknown, status = 200, headers: HeadersInit = {}) {
 }
 
 function normalizeName(value: string) {
-  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('cs-CZ')
+  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase()
 }
 
 function sqlDate(date: Date) {
@@ -196,7 +196,7 @@ async function register(request: Request, env: Env) {
 
   if (displayName.length < 2 || displayName.length > 40) return json({ error: 'Jméno musí mít 2 až 40 znaků.' }, 400)
   if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
-    return json({ error: `Heslo musí mít ${PASSWORD_MIN_LENGTH} až ${PASSWORD_MAX_LENGTH} znaků.` }, 400)
+    return json({ error: `Heslo musí mít alespoň ${PASSWORD_MIN_LENGTH} znaky.` }, 400)
   }
 
   const existing = await env.DB.prepare('SELECT id FROM users WHERE username_norm = ?1 LIMIT 1').bind(usernameNorm).first<{ id: string }>()
@@ -241,7 +241,7 @@ async function register(request: Request, env: Env) {
     await env.DB.batch(statements)
   } catch (error) {
     console.error('register_failed', error)
-    return json({ error: 'Profil se nepodařilo vytvořit.' }, 500)
+    return json({ error: 'Profil se nepodařilo uložit do databáze.' }, 500)
   }
 
   return json(
@@ -330,7 +330,7 @@ export default {
         return await handleApi(request, env)
       } catch (error) {
         console.error('api_failed', error)
-        return json({ error: 'Backend se rozbil. Zkus obnovit stránku po deployi.' }, 500)
+        return json({ error: 'Backend narazil na chybu. Pošli mi přesnou hlášku z formuláře.' }, 500)
       }
     }
     return env.ASSETS.fetch(request)
