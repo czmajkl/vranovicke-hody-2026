@@ -1,11 +1,15 @@
-import { useMemo, useState } from 'react'
+import { FormEvent, useMemo, useState } from 'react'
 import {
+  ArrowLeft,
   BookImage,
   Camera,
   Check,
   ChevronRight,
   CircleUserRound,
   Home,
+  ImagePlus,
+  LockKeyhole,
+  LogIn,
   Medal,
   MessageCircle,
   Moon,
@@ -18,11 +22,13 @@ import {
   Shuffle,
   Sparkles,
   Trophy,
+  UserPlus,
   UsersRound,
   type LucideIcon,
 } from 'lucide-react'
 
 type Screen = 'home' | 'people' | 'chronicle' | 'game' | 'profile'
+type EntryMode = 'welcome' | 'register' | 'login' | 'app'
 
 type Person = {
   name: string
@@ -31,6 +37,11 @@ type Person = {
   meetings: number
   achievements: string[]
   accent: 'wine' | 'green' | 'blue' | 'gold'
+}
+
+type DemoProfile = {
+  name: string
+  note: string
 }
 
 type ChronicleItem = {
@@ -141,6 +152,99 @@ function PhotoPlaceholder({ person, large = false }: { person: Person; large?: b
   )
 }
 
+function WelcomeScreen({ onRegister, onLogin, onDemo }: { onRegister: () => void; onLogin: () => void; onDemo: () => void }) {
+  const inviter = useMemo(() => new URLSearchParams(window.location.search).get('ref'), [])
+
+  return (
+    <section className="entry-screen">
+      <div className="entry-poster">
+        <div className="entry-pattern" aria-hidden="true" />
+        <div className="entry-corner entry-corner-a" aria-hidden="true" />
+        <div className="entry-corner entry-corner-b" aria-hidden="true" />
+        <div className="entry-rosette"><FolkRosette /></div>
+        <p className="entry-kicker">Vranovické hody · 2026</p>
+        <h1>Vítej na hodech!</h1>
+        <p className="entry-lead">Najdi člověka, vezmi si otázku a pak ten telefon zase schovej. Přesně tak složitý to je.</p>
+        {inviter && <p className="invite-note"><Sparkles size={15} /> Do hry tě pozval {inviter}.</p>}
+        <div className="entry-ribbons" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+      </div>
+
+      <div className="entry-actions">
+        <button className="entry-primary" type="button" onClick={onRegister}><UserPlus size={20} /> Vytvořit profil</button>
+        <button className="entry-secondary" type="button" onClick={onLogin}><LogIn size={20} /> Som na hodech!</button>
+        <button className="entry-demo" type="button" onClick={onDemo}>Otevřít prototyp bez účtu <ChevronRight size={16} /></button>
+      </div>
+      <p className="prototype-warning">Teď je to ještě UI prototyp. Hesla ani profily se na této obrazovce zatím nikam neukládají.</p>
+    </section>
+  )
+}
+
+function RegisterScreen({ onBack, onDone }: { onBack: () => void; onDone: (profile: DemoProfile) => void }) {
+  const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
+  const [note, setNote] = useState('')
+  const [photoName, setPhotoName] = useState('')
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    if (!name.trim() || password.length < 4) return
+    onDone({ name: name.trim(), note: note.trim() || 'Zatím o sobě nic neprozradil.' })
+  }
+
+  return (
+    <section className="entry-screen form-entry">
+      <button className="entry-back" type="button" onClick={onBack}><ArrowLeft size={18} /> Zpátky</button>
+      <div className="entry-form-card">
+        <div className="form-ornament" aria-hidden="true" />
+        <FolkRosette />
+        <p className="eyebrow">Nový profil</p>
+        <h1>Vítej na hodech!</h1>
+        <p className="form-intro">Stačí jméno a heslo. Fotka a krátká věta jsou dobrovolné, protože nucené bio je sociální zločin.</p>
+
+        <form onSubmit={submit} className="entry-form">
+          <label><span>Jméno nebo přezdívka</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Michael" autoComplete="name" required /></label>
+          <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Aspoň 4 znaky pro prototyp" minLength={4} autoComplete="new-password" required /></div></label>
+          <label><span>Krátká věta o sobě <em>nepovinné</em></span><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Když mě nenajdeš, jsem asi..." maxLength={120} /></label>
+          <label className="photo-picker"><ImagePlus size={21} /><div><strong>{photoName || 'Přidat profilovou fotku'}</strong><span>nepovinné · zatím jen náhled UI</span></div><input type="file" accept="image/*" onChange={(event) => setPhotoName(event.target.files?.[0]?.name ?? '')} /></label>
+          <button className="entry-primary" type="submit"><PartyPopper size={20} /> Som na hodech!</button>
+        </form>
+      </div>
+    </section>
+  )
+}
+
+function LoginScreen({ onBack, onDone }: { onBack: () => void; onDone: (profile: DemoProfile) => void }) {
+  const [selected, setSelected] = useState(people[0].name)
+  const [password, setPassword] = useState('')
+  const person = people.find((item) => item.name === selected) ?? people[0]
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    if (!password) return
+    onDone({ name: person.name, note: person.note })
+  }
+
+  return (
+    <section className="entry-screen form-entry">
+      <button className="entry-back" type="button" onClick={onBack}><ArrowLeft size={18} /> Zpátky</button>
+      <div className="entry-form-card login-card">
+        <div className="form-ornament" aria-hidden="true" />
+        <FolkRosette />
+        <p className="eyebrow">Už tě známe</p>
+        <h1>Som na hodech!</h1>
+        <p className="form-intro">Najdi se v seznamu a zadej heslo. E-mail po tobě opravdu nechceme. Lidstvo už má formulářů dost.</p>
+
+        <form onSubmit={submit} className="entry-form">
+          <label><span>Kdo jsi?</span><select value={selected} onChange={(event) => setSelected(event.target.value)}>{people.map((item) => <option key={item.name}>{item.name}</option>)}</select></label>
+          <div className="login-person-preview"><PhotoPlaceholder person={person} /><div><strong>{person.name}</strong><p>{person.note}</p></div></div>
+          <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Tvoje heslo" autoComplete="current-password" required /></div></label>
+          <button className="entry-primary" type="submit"><LogIn size={20} /> Jdu dovnitř</button>
+        </form>
+      </div>
+    </section>
+  )
+}
+
 function HomeScreen() {
   const [personIndex, setPersonIndex] = useState(0)
   const [freeMode, setFreeMode] = useState(false)
@@ -174,59 +278,33 @@ function HomeScreen() {
       </div>
 
       <div className="home-heading">
-        <div>
-          <p className="eyebrow">Som na hodech</p>
-          <h1>Dej se do řeči.</h1>
-        </div>
+        <div><p className="eyebrow">Som na hodech</p><h1>Dej se do řeči.</h1></div>
         <button className="status-pill" type="button"><PartyPopper size={16} /> Som ve hře</button>
       </div>
 
       <article className="person-card">
-        <div className="card-ribbon" aria-hidden="true">
-          <span>VRANOVICE</span><FolkRosette small /><span>HODY 2026</span>
-        </div>
+        <div className="card-ribbon" aria-hidden="true"><span>VRANOVICE</span><FolkRosette small /><span>HODY 2026</span></div>
         <PhotoPlaceholder person={person} large />
-
         <div className="person-copy">
-          <p className="eyebrow">Teď ti padl</p>
-          <h2>{person.name}</h2>
-          <p className="person-note">{person.note}</p>
+          <p className="eyebrow">Teď ti padl</p><h2>{person.name}</h2><p className="person-note">{person.note}</p>
           {person.meetings > 0 && <p className="meeting-note"><MessageCircle size={15} /> Vy spolu: {person.meetings}×</p>}
         </div>
-
         <RibbonDivider />
-
         {!freeMode ? (
           <div className="questions">
             <p className="section-label">Vyber si jednu. Nebo žádnou.</p>
-            {person.questions.map((question, index) => (
-              <button className="question" key={question} type="button">
-                <span>{index + 1}</span>
-                <p>{question}</p>
-              </button>
-            ))}
+            {person.questions.map((question, index) => <button className="question" key={question} type="button"><span>{index + 1}</span><p>{question}</p></button>)}
           </div>
         ) : (
-          <div className="free-mode">
-            <FolkRosette small />
-            <p className="free-mode-kicker">Volná zábava</p>
-            <p className="free-mode-copy">Tak už si povídejte. Moje práce tady končí.</p>
-          </div>
+          <div className="free-mode"><FolkRosette small /><p className="free-mode-kicker">Volná zábava</p><p className="free-mode-copy">Tak už si povídejte. Moje práce tady končí.</p></div>
         )}
-
         <div className="actions">
-          <button className={`primary-button${interactionDone ? ' success' : ''}`} type="button" onClick={confirmInteraction}>
-            {interactionDone ? <><Check size={19} /> Bavili jsme se</> : <><MessageCircle size={19} /> Bavili jsme se</>}
-          </button>
+          <button className={`primary-button${interactionDone ? ' success' : ''}`} type="button" onClick={confirmInteraction}>{interactionDone ? <><Check size={19} /> Bavili jsme se</> : <><MessageCircle size={19} /> Bavili jsme se</>}</button>
           {!freeMode && <button className="secondary-button" type="button" onClick={() => setFreeMode(true)}><Sparkles size={18} /> Volná zábava</button>}
           <button className="text-button" type="button" onClick={showAnotherPerson}><Shuffle size={18} /> Jiný člověk <ChevronRight size={17} /></button>
         </div>
       </article>
-
-      <div className="pocket-note">
-        <FolkRosette small />
-        <p><strong>{interactionCount}</strong> testovacích interakcí. Ideální stav: mobil zase do kapsy.</p>
-      </div>
+      <div className="pocket-note"><FolkRosette small /><p><strong>{interactionCount}</strong> testovacích interakcí. Ideální stav: mobil zase do kapsy.</p></div>
     </section>
   )
 }
@@ -234,27 +312,18 @@ function HomeScreen() {
 function PeopleScreen({ onPick }: { onPick: () => void }) {
   const [query, setQuery] = useState('')
   const filtered = people.filter((person) => person.name.toLowerCase().includes(query.toLowerCase()))
-
   return (
     <section className="screen">
       <PageHeader eyebrow="Kdo je na hodech" title="Lidi" subtitle="Všichni, kdo jsou právě ve hře. Žádný popularity meter, jen vaše společná historie." />
-      <label className="search-box">
-        <Search size={19} />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Najít člověka" />
-      </label>
+      <label className="search-box"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Najít člověka" /></label>
       <div className="people-grid">
         {filtered.map((person) => (
           <article className="person-tile" key={person.name}>
             <PhotoPlaceholder person={person} />
             <div className="person-tile-body">
-              <div className="person-title-row">
-                <h2>{person.name}</h2>
-                <span className="meeting-badge"><MessageCircle size={13} /> {person.meetings}×</span>
-              </div>
+              <div className="person-title-row"><h2>{person.name}</h2><span className="meeting-badge"><MessageCircle size={13} /> {person.meetings}×</span></div>
               <p>{person.note}</p>
-              <div className="achievement-row">
-                {person.achievements.slice(0, 2).map((achievement) => <span key={achievement}><Medal size={14} /> {achievement}</span>)}
-              </div>
+              <div className="achievement-row">{person.achievements.slice(0, 2).map((achievement) => <span key={achievement}><Medal size={14} /> {achievement}</span>)}</div>
               <button className="mini-button" type="button" onClick={onPick}>Nahodit otázky <ChevronRight size={15} /></button>
             </div>
           </article>
@@ -271,20 +340,8 @@ function ChronicleScreen() {
       <div className="chronicle-list">
         {chronicle.map((item, index) => (
           <article className={`chronicle-card chronicle-${item.accent}`} key={item.id}>
-            {index < 2 ? (
-              <div className="chronicle-photo">
-                <div className="photo-textile" aria-hidden="true" />
-                <Camera size={29} />
-                <strong>{item.initials}</strong>
-                <span>společná fotka</span>
-              </div>
-            ) : (
-              <div className="achievement-event"><FolkRosette /><Medal size={21} /><span>nový odznak</span></div>
-            )}
-            <div className="chronicle-copy">
-              <div><h2>{item.title}</h2><span>{item.meta}</span></div>
-              {item.caption && <p>{item.caption}</p>}
-            </div>
+            {index < 2 ? <div className="chronicle-photo"><div className="photo-textile" aria-hidden="true" /><Camera size={29} /><strong>{item.initials}</strong><span>společná fotka</span></div> : <div className="achievement-event"><FolkRosette /><Medal size={21} /><span>nový odznak</span></div>}
+            <div className="chronicle-copy"><div><h2>{item.title}</h2><span>{item.meta}</span></div>{item.caption && <p>{item.caption}</p>}</div>
           </article>
         ))}
       </div>
@@ -300,93 +357,47 @@ function GameScreen() {
     ['Fotograf', 'Přidej 5 momentek', '2/5'],
     ['Ještě jednou', 'Potkej někoho podruhé', '✓'],
   ]
-
   return (
     <section className="screen">
       <PageHeader eyebrow="Vedlejší disciplína" title="Hra" subtitle="Body jsou koření, ne večeře. Hlavní program se pořád odehrává mimo displej." />
-      <div className="score-card">
-        <div className="score-pattern" aria-hidden="true" />
-        <div className="score-main"><p>Tvoje skóre</p><strong>47</strong><span>bodů</span></div>
-        <Trophy className="score-trophy" size={42} />
-        <p className="score-caption">6 lidí · 2 fotky · 4 odznaky</p>
-      </div>
-
+      <div className="score-card"><div className="score-pattern" aria-hidden="true" /><div className="score-main"><p>Tvoje skóre</p><strong>47</strong><span>bodů</span></div><Trophy className="score-trophy" size={42} /><p className="score-caption">6 lidí · 2 fotky · 4 odznaky</p></div>
       <h2 className="section-title">Odznaky</h2>
-      <div className="achievement-list">
-        {achievements.map(([name, description, progress], index) => (
-          <article className={`achievement-card medal-${index % 4}`} key={name}>
-            <span className="achievement-medal"><FolkRosette small /></span>
-            <div><h3>{name}</h3><p>{description}</p></div>
-            <strong>{progress}</strong>
-          </article>
-        ))}
-      </div>
-
+      <div className="achievement-list">{achievements.map(([name, description, progress], index) => <article className={`achievement-card medal-${index % 4}`} key={name}><span className="achievement-medal"><FolkRosette small /></span><div><h3>{name}</h3><p>{description}</p></div><strong>{progress}</strong></article>)}</div>
       <div className="leaderboard-heading"><h2 className="section-title">Žebříček</h2><span>jen bokovka</span></div>
-      <div className="leaderboard">
-        {['Anička', 'Kuba', 'Klára', 'Ty', 'Petr'].map((name, index) => (
-          <div className={`leader-row${name === 'Ty' ? ' me' : ''}`} key={name}>
-            <span>{index + 1}</span><strong>{name}</strong><em>{[76, 69, 58, 47, 31][index]} b.</em>
-          </div>
-        ))}
-      </div>
+      <div className="leaderboard">{['Anička', 'Kuba', 'Klára', 'Ty', 'Petr'].map((name, index) => <div className={`leader-row${name === 'Ty' ? ' me' : ''}`} key={name}><span>{index + 1}</span><strong>{name}</strong><em>{[76, 69, 58, 47, 31][index]} b.</em></div>)}</div>
     </section>
   )
 }
 
-function ProfileScreen() {
+function ProfileScreen({ profile, onShowWelcome }: { profile: DemoProfile; onShowWelcome: () => void }) {
   const [quiet, setQuiet] = useState(false)
-  const me: Person = useMemo(() => ({
-    name: 'Michael',
-    note: 'Pravděpodobně něco řeším a tvrdím, že už nic řešit nebudu.',
-    questions: [],
-    meetings: 0,
-    achievements: ['Seznamovač', 'Ještě jednou'],
-    accent: 'wine',
-  }), [])
-
+  const me: Person = useMemo(() => ({ name: profile.name, note: profile.note, questions: [], meetings: 0, achievements: ['Seznamovač', 'Ještě jednou'], accent: 'wine' }), [profile])
   return (
     <section className="screen">
       <PageHeader eyebrow="Tvoje místo" title="Profil" />
-      <article className="profile-card">
-        <PhotoPlaceholder person={me} />
-        <div className="profile-copy">
-          <p className="eyebrow">Som na hodech</p>
-          <h2>{me.name}</h2>
-          <p>{me.note}</p>
-          <button className="mini-button" type="button"><Pencil size={15} /> Upravit profil</button>
-        </div>
-      </article>
-
-      <button className={`quiet-card${quiet ? ' quiet-on' : ''}`} type="button" onClick={() => setQuiet((current) => !current)}>
-        <span className="quiet-icon">{quiet ? <Moon size={22} /> : <PartyPopper size={22} />}</span>
-        <div><strong>{quiet ? 'Neotravuj' : 'Som ve hře'}</strong><p>{quiet ? 'Ostatním tě teď náhodně nenabízíme.' : 'Můžeš se objevovat ostatním na hlavní obrazovce.'}</p></div>
-        <span className="toggle"><i /></span>
-      </button>
-
-      <article className="invite-card">
-        <div className="invite-corner" aria-hidden="true" />
-        <div className="invite-copy">
-          <p className="eyebrow">Přiveď dalšího</p>
-          <h2>Pozvi někoho</h2>
-          <p>Pošleš stejný vstup do hry. Za hotovou registraci pak pár symbolických bodů.</p>
-          <button className="primary-button" type="button"><Share2 size={18} /> Sdílet pozvánku</button>
-        </div>
-        <div className="qr-placeholder" aria-label="Místo pro budoucí QR kód"><QrCode size={52} /><span>QR</span></div>
-      </article>
-
-      <div className="profile-achievements">
-        <h2 className="section-title">Tvoje odznaky</h2>
-        <div className="achievement-row large">
-          {me.achievements.map((achievement) => <span key={achievement}><Medal size={15} /> {achievement}</span>)}
-        </div>
-      </div>
+      <article className="profile-card"><PhotoPlaceholder person={me} /><div className="profile-copy"><p className="eyebrow">Som na hodech</p><h2>{me.name}</h2><p>{me.note}</p><button className="mini-button" type="button"><Pencil size={15} /> Upravit profil</button></div></article>
+      <button className={`quiet-card${quiet ? ' quiet-on' : ''}`} type="button" onClick={() => setQuiet((current) => !current)}><span className="quiet-icon">{quiet ? <Moon size={22} /> : <PartyPopper size={22} />}</span><div><strong>{quiet ? 'Neotravuj' : 'Som ve hře'}</strong><p>{quiet ? 'Ostatním tě teď náhodně nenabízíme.' : 'Můžeš se objevovat ostatním na hlavní obrazovce.'}</p></div><span className="toggle"><i /></span></button>
+      <article className="invite-card"><div className="invite-corner" aria-hidden="true" /><div className="invite-copy"><p className="eyebrow">Přiveď dalšího</p><h2>Pozvi někoho</h2><p>Pošleš stejný vstup do hry. Za hotovou registraci pak pár symbolických bodů.</p><button className="primary-button" type="button"><Share2 size={18} /> Sdílet pozvánku</button></div><div className="qr-placeholder" aria-label="Místo pro budoucí QR kód"><QrCode size={52} /><span>QR</span></div></article>
+      <div className="profile-achievements"><h2 className="section-title">Tvoje odznaky</h2><div className="achievement-row large">{me.achievements.map((achievement) => <span key={achievement}><Medal size={15} /> {achievement}</span>)}</div></div>
+      <button className="prototype-reset" type="button" onClick={onShowWelcome}>Znovu ukázat vstupní obrazovku</button>
     </section>
   )
 }
 
 function App() {
+  const [entryMode, setEntryMode] = useState<EntryMode>('welcome')
   const [screen, setScreen] = useState<Screen>('home')
+  const [profile, setProfile] = useState<DemoProfile>({ name: 'Michael', note: 'Pravděpodobně něco řeším a tvrdím, že už nic řešit nebudu.' })
+
+  const enterApp = (nextProfile?: DemoProfile) => {
+    if (nextProfile) setProfile(nextProfile)
+    setEntryMode('app')
+    setScreen('home')
+  }
+
+  if (entryMode === 'welcome') return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><WelcomeScreen onRegister={() => setEntryMode('register')} onLogin={() => setEntryMode('login')} onDemo={() => enterApp()} /></main>
+  if (entryMode === 'register') return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><RegisterScreen onBack={() => setEntryMode('welcome')} onDone={enterApp} /></main>
+  if (entryMode === 'login') return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><LoginScreen onBack={() => setEntryMode('welcome')} onDone={enterApp} /></main>
 
   return (
     <main className="app-shell">
@@ -395,15 +406,9 @@ function App() {
       {screen === 'people' && <PeopleScreen onPick={() => setScreen('home')} />}
       {screen === 'chronicle' && <ChronicleScreen />}
       {screen === 'game' && <GameScreen />}
-      {screen === 'profile' && <ProfileScreen />}
-
+      {screen === 'profile' && <ProfileScreen profile={profile} onShowWelcome={() => setEntryMode('welcome')} />}
       <nav className="bottom-nav" aria-label="Hlavní navigace">
-        {navItems.map((item) => (
-          <button className={screen === item.id ? 'active' : ''} key={item.id} type="button" onClick={() => setScreen(item.id)}>
-            <item.Icon size={19} strokeWidth={2.15} />
-            <span>{item.label}</span>
-          </button>
-        ))}
+        {navItems.map((item) => <button className={screen === item.id ? 'active' : ''} key={item.id} type="button" onClick={() => setScreen(item.id)}><item.Icon size={19} strokeWidth={2.15} /><span>{item.label}</span></button>)}
       </nav>
     </main>
   )
