@@ -183,7 +183,7 @@ export async function checkPhotoStorage(env: PhotoStorageEnv) {
     console.error('r2_health_failed', error)
   }
   try {
-    await getGoogleAccessToken(env)
+    await ensureArchiveFolder(env)
     status.drive = true
   } catch (error) {
     console.error('drive_health_failed', error)
