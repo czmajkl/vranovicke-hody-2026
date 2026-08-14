@@ -8,6 +8,7 @@ import HodyAppV6 from './HodyAppV6'
 import './styles.css'
 import './onboarding.css'
 import './hody-v2.css'
+import './hody-v6-copy.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
