@@ -1,0 +1,44 @@
+.entry-error {
+  margin: 0;
+  border: 1px solid rgba(143, 41, 56, .25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #7b2231;
+  background: rgba(143, 41, 56, .07);
+  font-size: .82rem;
+  line-height: 1.4;
+}
+
+.entry-primary:disabled,
+.entry-secondary:disabled {
+  cursor: wait;
+  opacity: .62;
+}
+
+.app-loading {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 72vh;
+  text-align: center;
+  color: var(--muted);
+}
+
+.app-loading .folk-rosette { margin-bottom: 14px; }
+.app-loading strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--wine);
+  font-family: var(--display);
+  font-size: 2rem;
+}
+
+.login-empty {
+  margin: 0;
+  border-radius: 14px;
+  padding: 13px;
+  color: var(--muted);
+  background: rgba(35, 94, 131, .06);
+  font-size: .82rem;
+  line-height: 1.45;
+}
