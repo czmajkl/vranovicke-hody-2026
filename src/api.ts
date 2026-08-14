@@ -18,8 +18,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   })
 
-  const body = await response.json().catch(() => ({})) as T & ApiError
-  if (!response.ok) throw new Error(body.error || 'Něco se nepovedlo.')
+  const text = await response.text()
+  let body: (T & ApiError) | null = null
+  if (text) {
+    try {
+      body = JSON.parse(text) as T & ApiError
+    } catch {
+      body = null
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(body?.error || `Server vrátil chybu ${response.status}.`)
+  }
+
+  if (!body) throw new Error('Server poslal nečitelnou odpověď.')
   return body
 }
 
