@@ -17,6 +17,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/main.tsx", "src/HodyAppNext.tsx", "src/api-next.ts", "src/photo-next.ts"],
+  "include": ["src/main.tsx", "src/HodyAppV6.tsx", "src/api-v6.ts", "src/api-next.ts", "src/photo-next.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
