@@ -198,7 +198,7 @@ function RegisterScreen({ onBack, onDone }: { onBack: () => void; onDone: (profi
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!name.trim() || password.length < 4 || password.length > 5 || busy) return
+    if (!name.trim() || password.length < 4 || busy) return
     setBusy(true)
     setError('')
     try {
@@ -223,11 +223,11 @@ function RegisterScreen({ onBack, onDone }: { onBack: () => void; onDone: (profi
         <FolkRosette />
         <p className="eyebrow">Nový profil</p>
         <h1>Vítej na hodech!</h1>
-        <p className="form-intro">Stačí jméno a krátké heslo. Fotka a krátká věta jsou dobrovolné, protože nucené bio je sociální zločin.</p>
+        <p className="form-intro">Stačí jméno a heslo. Minimum jsou čtyři znaky, víc klidně můžeš. Fotka a krátká věta jsou dobrovolné, protože nucené bio je sociální zločin.</p>
 
         <form onSubmit={submit} className="entry-form">
           <label><span>Jméno nebo přezdívka</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Michael" autoComplete="name" minLength={2} maxLength={40} required /></label>
-          <label><span>Heslo · 4 až 5 znaků</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Třeba 12345" minLength={4} maxLength={5} autoComplete="new-password" required /></div></label>
+          <label><span>Heslo · minimálně 4 znaky</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Třeba 1234" minLength={4} maxLength={128} autoComplete="new-password" required /></div></label>
           <label><span>Krátká věta o sobě <em>nepovinné</em></span><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Když mě nenajdeš, jsem asi..." maxLength={120} /></label>
           <label className="photo-picker"><ImagePlus size={21} /><div><strong>{photoName || 'Přidat profilovou fotku'}</strong><span>nepovinné · upload zapojíme s R2</span></div><input type="file" accept="image/*" onChange={(event) => setPhotoName(event.target.files?.[0]?.name ?? '')} /></label>
           {error && <p className="entry-error" role="alert">{error}</p>}
@@ -275,7 +275,7 @@ function LoginScreen({ onBack, onDone }: { onBack: () => void; onDone: (profile:
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!selected || password.length < 4 || password.length > 5 || busy) return
+    if (!selected || password.length < 4 || busy) return
     setBusy(true)
     setError('')
     try {
@@ -303,7 +303,7 @@ function LoginScreen({ onBack, onDone }: { onBack: () => void; onDone: (profile:
             <>
               <label><span>Kdo jsi?</span><select value={selected} onChange={(event) => setSelected(event.target.value)}>{users.map((item) => <option key={item.id} value={item.display_name}>{item.display_name}</option>)}</select></label>
               {selectedPerson && <div className="login-person-preview"><PhotoPlaceholder person={selectedPerson} /><div><strong>{selectedPerson.name}</strong><p>{selectedPerson.note}</p></div></div>}
-              <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="4 až 5 znaků" minLength={4} maxLength={5} autoComplete="current-password" required /></div></label>
+              <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Minimálně 4 znaky" minLength={4} maxLength={128} autoComplete="current-password" required /></div></label>
             </>
           ) : <p className="login-empty">Zatím tu není žádný účet. Někdo musí být první, taková je krutá matematika databází.</p>}
           {error && <p className="entry-error" role="alert">{error}</p>}
