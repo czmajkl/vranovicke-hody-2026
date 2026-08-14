@@ -8,5 +8,13 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vranovicke-hody-2026-db",
+      "database_id": "2a47d9c8-8562-4c4b-87d4-7b13b281f158",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
