@@ -4,12 +4,13 @@ import '@fontsource/cormorant-garamond/400.css'
 import '@fontsource/cormorant-garamond/500.css'
 import '@fontsource/cormorant-garamond/600.css'
 import '@fontsource/cormorant-garamond/700.css'
-import App from './App'
+import HodyApp from './HodyApp'
 import './styles.css'
 import './onboarding.css'
+import './hody-v2.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <HodyApp />
   </React.StrictMode>,
 )
