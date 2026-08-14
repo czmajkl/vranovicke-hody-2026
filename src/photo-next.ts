@@ -1,3 +1,12 @@
+type ArchiveResult = {
+  ok: true
+  drive_file_id: string
+  drive_name: string
+}
+
+let pendingMomentArchive: Promise<ArchiveResult> | null = null
+let pendingProfileFile: File | null = null
+
 function loadImage(file: File) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const url = URL.createObjectURL(file)
@@ -37,10 +46,57 @@ async function compressImage(file: File, maxEdge: number, quality: number, maxOu
   return output
 }
 
-export function compressProfilePhoto(file: File) {
-  return compressImage(file, 420, 0.76, 820_000)
+export async function uploadOriginalPhoto(file: File, purpose: 'moment' | 'profile') {
+  const form = new FormData()
+  form.append('file', file, file.name || `hody-${purpose}.jpg`)
+  form.append('purpose', purpose)
+  const response = await fetch('/api/photos/original', {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form,
+  })
+  const text = await response.text()
+  let payload: (ArchiveResult & { error?: string }) | null = null
+  try {
+    payload = text ? JSON.parse(text) as ArchiveResult & { error?: string } : null
+  } catch {
+    payload = null
+  }
+  if (!response.ok || !payload?.drive_file_id) {
+    throw new Error(payload?.error || `Archiv originálu vrátil chybu ${response.status}.`)
+  }
+  return payload
 }
 
-export function compressMomentPhoto(file: File) {
-  return compressImage(file, 1280, 0.78, 1_250_000)
+export async function compressProfilePhoto(file: File) {
+  pendingProfileFile = file
+  try {
+    return await compressImage(file, 420, 0.76, 820_000)
+  } catch (error) {
+    pendingProfileFile = null
+    throw error
+  }
+}
+
+export async function compressMomentPhoto(file: File) {
+  pendingMomentArchive = uploadOriginalPhoto(file, 'moment')
+  try {
+    return await compressImage(file, 1280, 0.78, 1_250_000)
+  } catch (error) {
+    pendingMomentArchive = null
+    throw error
+  }
+}
+
+export async function takePendingMomentArchive() {
+  const pending = pendingMomentArchive
+  pendingMomentArchive = null
+  if (!pending) return null
+  return pending
+}
+
+export function takePendingProfileFile() {
+  const file = pendingProfileFile
+  pendingProfileFile = null
+  return file
 }
