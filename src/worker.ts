@@ -1,6 +1,8 @@
 const SESSION_COOKIE = 'hody_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 const PBKDF2_ITERATIONS = 600_000
+const PASSWORD_MIN_LENGTH = 4
+const PASSWORD_MAX_LENGTH = 5
 
 interface D1Result<T = Record<string, unknown>> {
   success: boolean
@@ -172,6 +174,16 @@ async function parseJsonBody(request: Request) {
   }
 }
 
+async function databaseReady(env: Env) {
+  try {
+    await env.DB.prepare('SELECT id FROM users LIMIT 1').first<{ id: string }>()
+    return true
+  } catch (error) {
+    console.error('database_not_ready', error)
+    return false
+  }
+}
+
 async function register(request: Request, env: Env) {
   const body = await parseJsonBody(request)
   if (!body) return json({ error: 'Neplatná data.' }, 400)
@@ -183,7 +195,9 @@ async function register(request: Request, env: Env) {
   const ref = typeof body.ref === 'string' ? body.ref.trim().slice(0, 100) : ''
 
   if (displayName.length < 2 || displayName.length > 40) return json({ error: 'Jméno musí mít 2 až 40 znaků.' }, 400)
-  if (password.length < 10 || password.length > 128) return json({ error: 'Heslo musí mít 10 až 128 znaků.' }, 400)
+  if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    return json({ error: `Heslo musí mít ${PASSWORD_MIN_LENGTH} až ${PASSWORD_MAX_LENGTH} znaků.` }, 400)
+  }
 
   const existing = await env.DB.prepare('SELECT id FROM users WHERE username_norm = ?1 LIMIT 1').bind(usernameNorm).first<{ id: string }>()
   if (existing) return json({ error: 'Tohle jméno už ve hře je.' }, 409)
@@ -243,7 +257,9 @@ async function login(request: Request, env: Env) {
 
   const name = typeof body.name === 'string' ? body.name : ''
   const password = typeof body.password === 'string' ? body.password : ''
-  if (!name || !password || password.length > 128) return json({ error: 'Jméno nebo heslo nesedí.' }, 401)
+  if (!name || password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    return json({ error: 'Jméno nebo heslo nesedí.' }, 401)
+  }
 
   const user = await env.DB.prepare(`
     SELECT id, display_name, username_norm, password_hash, bio, profile_photo_key, is_available
@@ -282,10 +298,15 @@ async function listUsers(env: Env) {
 
 async function handleApi(request: Request, env: Env) {
   const url = new URL(request.url)
+  const ready = await databaseReady(env)
 
   if (request.method === 'GET' && url.pathname === '/api/health') {
-    return json({ ok: true, database: 'connected' })
+    return ready
+      ? json({ ok: true, database: 'ready' })
+      : json({ ok: false, database: 'not_ready', error: 'Databáze ještě nemá tabulky.' }, 503)
   }
+
+  if (!ready) return json({ error: 'Databáze se ještě připravuje. Zkus to po dalším deployi.' }, 503)
 
   if (request.method === 'GET' && url.pathname === '/api/users') return listUsers(env)
   if (request.method === 'POST' && url.pathname === '/api/register') return register(request, env)
@@ -304,7 +325,14 @@ async function handleApi(request: Request, env: Env) {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
-    if (url.pathname.startsWith('/api/')) return handleApi(request, env)
+    if (url.pathname.startsWith('/api/')) {
+      try {
+        return await handleApi(request, env)
+      } catch (error) {
+        console.error('api_failed', error)
+        return json({ error: 'Backend se rozbil. Zkus obnovit stránku po deployi.' }, 500)
+      }
+    }
     return env.ASSETS.fetch(request)
   },
 }
