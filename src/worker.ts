@@ -4,6 +4,8 @@ const PBKDF2_ITERATIONS = 10_000
 const PASSWORD_MIN_LENGTH = 4
 const PASSWORD_MAX_LENGTH = 128
 const MAX_PROFILE_PHOTO_LENGTH = 900_000
+const VALID_GENDERS = new Set(['male', 'female'])
+const VALID_DANCE_LEVELS = new Set(['pro', 'amateur', 'wild'])
 
 interface D1Result<T = Record<string, unknown>> {
   success: boolean
@@ -31,12 +33,17 @@ interface Env {
   ASSETS: AssetsBinding
 }
 
+type Gender = 'male' | 'female'
+type DanceLevel = 'pro' | 'amateur' | 'wild'
+
 type PublicUser = {
   id: string
   display_name: string
   bio: string | null
   profile_photo_key: string | null
   profile_photo_data: string | null
+  gender: Gender | null
+  dance_level: DanceLevel | null
   is_available: number
 }
 
@@ -59,6 +66,22 @@ type ShotRow = {
   giver_user_id: string
   current_recipient_user_id: string
   status: 'offered' | 'accepted'
+}
+
+type ChronicleInviteRow = {
+  id: string
+  created_at: string
+  inviter_name: string
+  joined_name: string
+  joined_photo_data: string | null
+}
+
+type ChronicleInteractionRow = {
+  id: string
+  created_at: string
+  from_name: string
+  to_name: string
+  to_photo_data: string | null
 }
 
 const encoder = new TextEncoder()
@@ -166,7 +189,8 @@ async function getSessionUser(request: Request, db: D1Database) {
   if (!token) return null
   const tokenHash = await sha256(token)
   return db.prepare(`
-    SELECT s.id AS session_id, u.id, u.display_name, u.bio, u.profile_photo_key, u.profile_photo_data, u.is_available
+    SELECT s.id AS session_id, u.id, u.display_name, u.bio, u.profile_photo_key, u.profile_photo_data,
+           u.gender, u.dance_level, u.is_available
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = ?1 AND s.expires_at > CURRENT_TIMESTAMP
@@ -195,6 +219,8 @@ function publicUser(user: PublicUser) {
     bio: user.bio,
     profile_photo_key: user.profile_photo_key,
     profile_photo_data: user.profile_photo_data,
+    gender: user.gender,
+    dance_level: user.dance_level,
     is_available: user.is_available,
   }
 }
@@ -205,7 +231,7 @@ function validPhotoData(value: string) {
 
 async function databaseReady(env: Env) {
   try {
-    await env.DB.prepare('SELECT id FROM users LIMIT 1').first<{ id: string }>()
+    await env.DB.prepare('SELECT gender, dance_level FROM users LIMIT 1').first<{ gender: string | null; dance_level: string | null }>()
     await env.DB.prepare('SELECT id FROM shots LIMIT 1').first<{ id: string }>()
     return true
   } catch (error) {
@@ -224,12 +250,16 @@ async function register(request: Request, env: Env) {
   const bio = typeof body.bio === 'string' ? body.bio.normalize('NFKC').trim().slice(0, 120) : ''
   const ref = typeof body.ref === 'string' ? body.ref.trim().slice(0, 100) : ''
   const profilePhotoData = typeof body.profile_photo_data === 'string' ? body.profile_photo_data : ''
+  const gender = typeof body.gender === 'string' && VALID_GENDERS.has(body.gender) ? body.gender as Gender : null
+  const danceLevel = typeof body.dance_level === 'string' && VALID_DANCE_LEVELS.has(body.dance_level) ? body.dance_level as DanceLevel : null
 
   if (displayName.length < 2 || displayName.length > 40) return json({ error: 'Méno mosí mět 2 až 40 znaků.' }, 400)
   if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
     return json({ error: `Heslo mosí mět aspoň ${PASSWORD_MIN_LENGTH} znaky.` }, 400)
   }
   if (!validPhotoData(profilePhotoData)) return json({ error: 'Bez fotky tě do placu nepustíme. Nahraj ju znova.' }, 400)
+  if (!gender) return json({ error: 'Vyber, esi seš šohaj nebo děvčica.' }, 400)
+  if (!danceLevel) return json({ error: 'Práskni na sebe, jak seš na tom s tancem.' }, 400)
 
   const existing = await env.DB.prepare('SELECT id FROM users WHERE username_norm = ?1 LIMIT 1').bind(usernameNorm).first<{ id: string }>()
   if (existing) return json({ error: 'Takové méno už tu máme. Vymysli si druhé.' }, 409)
@@ -255,9 +285,9 @@ async function register(request: Request, env: Env) {
 
   const statements: D1PreparedStatement[] = [
     env.DB.prepare(`
-      INSERT INTO users (id, display_name, username_norm, password_hash, bio, profile_photo_data, inviter_user_id)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
-    `).bind(userId, displayName, usernameNorm, passwordHash, bio || null, profilePhotoData, inviterUserId),
+      INSERT INTO users (id, display_name, username_norm, password_hash, bio, profile_photo_data, gender, dance_level, inviter_user_id)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+    `).bind(userId, displayName, usernameNorm, passwordHash, bio || null, profilePhotoData, gender, danceLevel, inviterUserId),
     env.DB.prepare('INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?1, ?2, ?3, ?4)')
       .bind(sessionId, userId, tokenHash, expiresAt),
   ]
@@ -284,7 +314,7 @@ async function register(request: Request, env: Env) {
   }
 
   return json(
-    { user: { id: userId, display_name: displayName, bio: bio || null, profile_photo_key: null, profile_photo_data: profilePhotoData, is_available: 1 } },
+    { user: { id: userId, display_name: displayName, bio: bio || null, profile_photo_key: null, profile_photo_data: profilePhotoData, gender, dance_level: danceLevel, is_available: 1 } },
     201,
     { 'set-cookie': sessionCookie(token) },
   )
@@ -301,7 +331,8 @@ async function login(request: Request, env: Env) {
   }
 
   const user = await env.DB.prepare(`
-    SELECT id, display_name, username_norm, password_hash, bio, profile_photo_key, profile_photo_data, is_available
+    SELECT id, display_name, username_norm, password_hash, bio, profile_photo_key, profile_photo_data,
+           gender, dance_level, is_available
     FROM users WHERE username_norm = ?1 LIMIT 1
   `).bind(normalizeName(name)).first<UserWithPassword>()
 
@@ -324,7 +355,7 @@ async function logout(request: Request, env: Env) {
 
 async function listUsers(env: Env) {
   const result = await env.DB.prepare(`
-    SELECT id, display_name, bio, profile_photo_key, profile_photo_data, is_available
+    SELECT id, display_name, bio, profile_photo_key, profile_photo_data, gender, dance_level, is_available
     FROM users
     ORDER BY display_name COLLATE NOCASE ASC
   `).all<PublicUser>()
@@ -404,7 +435,7 @@ async function chronicle(env: Env) {
     JOIN users inviter ON inviter.id = u.inviter_user_id
     ORDER BY u.created_at DESC
     LIMIT 80
-  `).all<Record<string, unknown>>()
+  `).all<ChronicleInviteRow>()
 
   const interactions = await env.DB.prepare(`
     SELECT i.id, i.created_at, a.display_name AS from_name, b.display_name AS to_name,
@@ -414,12 +445,12 @@ async function chronicle(env: Env) {
     JOIN users b ON b.id = i.person_id
     ORDER BY i.created_at DESC
     LIMIT 80
-  `).all<Record<string, unknown>>()
+  `).all<ChronicleInteractionRow>()
 
   const events = [
-    ...(invites.results ?? []).map((row) => ({ type: 'invite', ...row })),
-    ...(interactions.results ?? []).map((row) => ({ type: 'interaction', ...row })),
-  ].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 100)
+    ...(invites.results ?? []).map((row) => ({ type: 'invite' as const, ...row })),
+    ...(interactions.results ?? []).map((row) => ({ type: 'interaction' as const, ...row })),
+  ].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 100)
 
   return json({ events })
 }
