@@ -1,9 +1,14 @@
+export type Gender = 'male' | 'female'
+export type DanceLevel = 'pro' | 'amateur' | 'wild'
+
 export type ApiUser = {
   id: string
   display_name: string
   bio: string | null
   profile_photo_key: string | null
   profile_photo_data: string | null
+  gender: Gender | null
+  dance_level: DanceLevel | null
   is_available: number
 }
 
@@ -86,7 +91,15 @@ export async function getUsers() {
   return request<{ users: ApiUser[] }>('/api/users')
 }
 
-export async function registerUser(input: { name: string; password: string; bio?: string; profile_photo_data: string; ref?: string }) {
+export async function registerUser(input: {
+  name: string
+  password: string
+  bio?: string
+  profile_photo_data: string
+  gender: Gender
+  dance_level: DanceLevel
+  ref?: string
+}) {
   return request<{ user: ApiUser }>('/api/register', {
     method: 'POST',
     body: JSON.stringify(input),
