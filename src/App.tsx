@@ -1,4 +1,26 @@
 import { useMemo, useState } from 'react'
+import {
+  BookImage,
+  Camera,
+  Check,
+  ChevronRight,
+  CircleUserRound,
+  Home,
+  Medal,
+  MessageCircle,
+  Moon,
+  PartyPopper,
+  Pencil,
+  Plus,
+  QrCode,
+  Search,
+  Share2,
+  Shuffle,
+  Sparkles,
+  Trophy,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react'
 
 type Screen = 'home' | 'people' | 'chronicle' | 'game' | 'profile'
 
@@ -77,43 +99,32 @@ const chronicle: ChronicleItem[] = [
   { id: 3, title: 'Anička získala Fotograf', meta: 'před 31 min', accent: 'blue', initials: 'A' },
 ]
 
-const navItems: { id: Screen; label: string; icon: string }[] = [
-  { id: 'home', label: 'Domů', icon: '⌂' },
-  { id: 'people', label: 'Lidi', icon: '♧' },
-  { id: 'chronicle', label: 'Kronika', icon: '▣' },
-  { id: 'game', label: 'Hra', icon: '✦' },
-  { id: 'profile', label: 'Profil', icon: '◉' },
+const navItems: { id: Screen; label: string; Icon: LucideIcon }[] = [
+  { id: 'home', label: 'Domů', Icon: Home },
+  { id: 'people', label: 'Lidi', Icon: UsersRound },
+  { id: 'chronicle', label: 'Kronika', Icon: BookImage },
+  { id: 'game', label: 'Hra', Icon: Sparkles },
+  { id: 'profile', label: 'Profil', Icon: CircleUserRound },
 ]
 
-function FolkMark({ small = false }: { small?: boolean }) {
-  return (
-    <span className={`folk-mark${small ? ' folk-mark-small' : ''}`} aria-hidden="true">
-      <i />
-      <i />
-      <i />
-      <i />
-      <b />
-    </span>
-  )
+function FolkRosette({ small = false }: { small?: boolean }) {
+  return <span className={`folk-rosette${small ? ' small' : ''}`} aria-hidden="true" />
 }
 
 function RibbonDivider() {
-  return (
-    <div className="ribbon-divider" aria-hidden="true">
-      <span />
-      <FolkMark small />
-      <span />
-    </div>
-  )
+  return <div className="ribbon-divider" aria-hidden="true" />
 }
 
 function PageHeader({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
   return (
     <header className="page-header">
-      <div className="page-header-mark"><FolkMark /></div>
-      <p className="eyebrow">{eyebrow}</p>
-      <h1>{title}</h1>
-      {subtitle && <p className="page-subtitle">{subtitle}</p>}
+      <div className="page-header-ornament" aria-hidden="true" />
+      <div className="page-header-copy">
+        <p className="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        {subtitle && <p className="page-subtitle">{subtitle}</p>}
+      </div>
+      <FolkRosette />
     </header>
   )
 }
@@ -121,7 +132,9 @@ function PageHeader({ eyebrow, title, subtitle }: { eyebrow: string; title: stri
 function PhotoPlaceholder({ person, large = false }: { person: Person; large?: boolean }) {
   return (
     <div className={`photo-placeholder accent-${person.accent}${large ? ' photo-large' : ''}`} aria-label={`Místo pro fotku uživatele ${person.name}`}>
-      <div className="photo-embroidery" aria-hidden="true" />
+      <div className="photo-textile" aria-hidden="true" />
+      <div className="photo-corner photo-corner-top" aria-hidden="true" />
+      <div className="photo-corner photo-corner-bottom" aria-hidden="true" />
       <span>{person.name.slice(0, 1).toUpperCase()}</span>
       <small>profilová fotka</small>
     </div>
@@ -151,11 +164,13 @@ function HomeScreen() {
   return (
     <section className="screen screen-home">
       <div className="festival-banner">
-        <div>
+        <div className="festival-banner-pattern" aria-hidden="true" />
+        <div className="festival-banner-copy">
+          <span className="banner-kicker">Tradiční</span>
           <p>Vranovické hody</p>
-          <strong>14.–17. srpna 2026</strong>
+          <strong>Vranovice · 2026</strong>
         </div>
-        <span className="festival-year">26</span>
+        <FolkRosette />
       </div>
 
       <div className="home-heading">
@@ -163,12 +178,12 @@ function HomeScreen() {
           <p className="eyebrow">Som na hodech</p>
           <h1>Dej se do řeči.</h1>
         </div>
-        <button className="status-pill" type="button"><span /> Som ve hře</button>
+        <button className="status-pill" type="button"><PartyPopper size={16} /> Som ve hře</button>
       </div>
 
       <article className="person-card">
         <div className="card-ribbon" aria-hidden="true">
-          <span>VRANOVICE</span><FolkMark small /><span>HODY 2026</span>
+          <span>VRANOVICE</span><FolkRosette small /><span>HODY 2026</span>
         </div>
         <PhotoPlaceholder person={person} large />
 
@@ -176,7 +191,7 @@ function HomeScreen() {
           <p className="eyebrow">Teď ti padl</p>
           <h2>{person.name}</h2>
           <p className="person-note">{person.note}</p>
-          {person.meetings > 0 && <p className="meeting-note">Vy spolu: {person.meetings}×</p>}
+          {person.meetings > 0 && <p className="meeting-note"><MessageCircle size={15} /> Vy spolu: {person.meetings}×</p>}
         </div>
 
         <RibbonDivider />
@@ -193,7 +208,7 @@ function HomeScreen() {
           </div>
         ) : (
           <div className="free-mode">
-            <FolkMark small />
+            <FolkRosette small />
             <p className="free-mode-kicker">Volná zábava</p>
             <p className="free-mode-copy">Tak už si povídejte. Moje práce tady končí.</p>
           </div>
@@ -201,15 +216,15 @@ function HomeScreen() {
 
         <div className="actions">
           <button className={`primary-button${interactionDone ? ' success' : ''}`} type="button" onClick={confirmInteraction}>
-            {interactionDone ? 'Bavili jsme se ✓' : 'Bavili jsme se'}
+            {interactionDone ? <><Check size={19} /> Bavili jsme se</> : <><MessageCircle size={19} /> Bavili jsme se</>}
           </button>
-          {!freeMode && <button className="secondary-button" type="button" onClick={() => setFreeMode(true)}>Volná zábava</button>}
-          <button className="text-button" type="button" onClick={showAnotherPerson}>Jiný člověk <span>→</span></button>
+          {!freeMode && <button className="secondary-button" type="button" onClick={() => setFreeMode(true)}><Sparkles size={18} /> Volná zábava</button>}
+          <button className="text-button" type="button" onClick={showAnotherPerson}><Shuffle size={18} /> Jiný člověk <ChevronRight size={17} /></button>
         </div>
       </article>
 
       <div className="pocket-note">
-        <FolkMark small />
+        <FolkRosette small />
         <p><strong>{interactionCount}</strong> testovacích interakcí. Ideální stav: mobil zase do kapsy.</p>
       </div>
     </section>
@@ -224,7 +239,7 @@ function PeopleScreen({ onPick }: { onPick: () => void }) {
     <section className="screen">
       <PageHeader eyebrow="Kdo je na hodech" title="Lidi" subtitle="Všichni, kdo jsou právě ve hře. Žádný popularity meter, jen vaše společná historie." />
       <label className="search-box">
-        <span>⌕</span>
+        <Search size={19} />
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Najít člověka" />
       </label>
       <div className="people-grid">
@@ -234,13 +249,13 @@ function PeopleScreen({ onPick }: { onPick: () => void }) {
             <div className="person-tile-body">
               <div className="person-title-row">
                 <h2>{person.name}</h2>
-                <span className="meeting-badge">{person.meetings}×</span>
+                <span className="meeting-badge"><MessageCircle size={13} /> {person.meetings}×</span>
               </div>
               <p>{person.note}</p>
               <div className="achievement-row">
-                {person.achievements.slice(0, 2).map((achievement) => <span key={achievement}>✦ {achievement}</span>)}
+                {person.achievements.slice(0, 2).map((achievement) => <span key={achievement}><Medal size={14} /> {achievement}</span>)}
               </div>
-              <button className="mini-button" type="button" onClick={onPick}>Nahodit otázky →</button>
+              <button className="mini-button" type="button" onClick={onPick}>Nahodit otázky <ChevronRight size={15} /></button>
             </div>
           </article>
         ))}
@@ -258,12 +273,13 @@ function ChronicleScreen() {
           <article className={`chronicle-card chronicle-${item.accent}`} key={item.id}>
             {index < 2 ? (
               <div className="chronicle-photo">
-                <div className="photo-embroidery" aria-hidden="true" />
+                <div className="photo-textile" aria-hidden="true" />
+                <Camera size={29} />
                 <strong>{item.initials}</strong>
                 <span>společná fotka</span>
               </div>
             ) : (
-              <div className="achievement-event"><FolkMark /><span>nový odznak</span></div>
+              <div className="achievement-event"><FolkRosette /><Medal size={21} /><span>nový odznak</span></div>
             )}
             <div className="chronicle-copy">
               <div><h2>{item.title}</h2><span>{item.meta}</span></div>
@@ -272,7 +288,7 @@ function ChronicleScreen() {
           </article>
         ))}
       </div>
-      <button className="primary-button upload-button" type="button">＋ Přidat momentku</button>
+      <button className="primary-button upload-button" type="button"><Plus size={19} /> Přidat momentku</button>
     </section>
   )
 }
@@ -289,16 +305,17 @@ function GameScreen() {
     <section className="screen">
       <PageHeader eyebrow="Vedlejší disciplína" title="Hra" subtitle="Body jsou koření, ne večeře. Hlavní program se pořád odehrává mimo displej." />
       <div className="score-card">
-        <div><p>Tvoje skóre</p><strong>47</strong><span>bodů</span></div>
-        <FolkMark />
+        <div className="score-pattern" aria-hidden="true" />
+        <div className="score-main"><p>Tvoje skóre</p><strong>47</strong><span>bodů</span></div>
+        <Trophy className="score-trophy" size={42} />
         <p className="score-caption">6 lidí · 2 fotky · 4 odznaky</p>
       </div>
 
       <h2 className="section-title">Odznaky</h2>
       <div className="achievement-list">
-        {achievements.map(([name, description, progress]) => (
-          <article className="achievement-card" key={name}>
-            <span className="achievement-medal">✦</span>
+        {achievements.map(([name, description, progress], index) => (
+          <article className={`achievement-card medal-${index % 4}`} key={name}>
+            <span className="achievement-medal"><FolkRosette small /></span>
             <div><h3>{name}</h3><p>{description}</p></div>
             <strong>{progress}</strong>
           </article>
@@ -337,30 +354,31 @@ function ProfileScreen() {
           <p className="eyebrow">Som na hodech</p>
           <h2>{me.name}</h2>
           <p>{me.note}</p>
-          <button className="mini-button" type="button">Upravit profil</button>
+          <button className="mini-button" type="button"><Pencil size={15} /> Upravit profil</button>
         </div>
       </article>
 
       <button className={`quiet-card${quiet ? ' quiet-on' : ''}`} type="button" onClick={() => setQuiet((current) => !current)}>
-        <span className="quiet-icon">{quiet ? '☾' : '✦'}</span>
+        <span className="quiet-icon">{quiet ? <Moon size={22} /> : <PartyPopper size={22} />}</span>
         <div><strong>{quiet ? 'Neotravuj' : 'Som ve hře'}</strong><p>{quiet ? 'Ostatním tě teď náhodně nenabízíme.' : 'Můžeš se objevovat ostatním na hlavní obrazovce.'}</p></div>
         <span className="toggle"><i /></span>
       </button>
 
       <article className="invite-card">
-        <div>
+        <div className="invite-corner" aria-hidden="true" />
+        <div className="invite-copy">
           <p className="eyebrow">Přiveď dalšího</p>
           <h2>Pozvi někoho</h2>
           <p>Pošleš stejný vstup do hry. Za hotovou registraci pak pár symbolických bodů.</p>
-          <button className="primary-button" type="button">Sdílet pozvánku</button>
+          <button className="primary-button" type="button"><Share2 size={18} /> Sdílet pozvánku</button>
         </div>
-        <div className="qr-placeholder" aria-label="Místo pro budoucí QR kód"><FolkMark /><span>QR</span></div>
+        <div className="qr-placeholder" aria-label="Místo pro budoucí QR kód"><QrCode size={52} /><span>QR</span></div>
       </article>
 
       <div className="profile-achievements">
         <h2 className="section-title">Tvoje odznaky</h2>
         <div className="achievement-row large">
-          {me.achievements.map((achievement) => <span key={achievement}>✦ {achievement}</span>)}
+          {me.achievements.map((achievement) => <span key={achievement}><Medal size={15} /> {achievement}</span>)}
         </div>
       </div>
     </section>
@@ -382,8 +400,8 @@ function App() {
       <nav className="bottom-nav" aria-label="Hlavní navigace">
         {navItems.map((item) => (
           <button className={screen === item.id ? 'active' : ''} key={item.id} type="button" onClick={() => setScreen(item.id)}>
-            <span>{item.icon}</span>
-            {item.label}
+            <item.Icon size={19} strokeWidth={2.15} />
+            <span>{item.label}</span>
           </button>
         ))}
       </nav>
