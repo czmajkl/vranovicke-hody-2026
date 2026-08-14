@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">Barevná hodová rozeta</title>
+  <g transform="translate(120 120)">
+    <g fill="#8f2938">
+      <ellipse rx="18" ry="55" transform="rotate(0) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(45) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(90) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(135) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(180) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(225) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(270) translate(0 -54)"/>
+      <ellipse rx="18" ry="55" transform="rotate(315) translate(0 -54)"/>
+    </g>
+    <g fill="#235e83">
+      <ellipse rx="12" ry="40" transform="rotate(22.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(67.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(112.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(157.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(202.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(247.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(292.5) translate(0 -52)"/>
+      <ellipse rx="12" ry="40" transform="rotate(337.5) translate(0 -52)"/>
+    </g>
+    <circle r="50" fill="#fff8e8" stroke="#2f6e56" stroke-width="9"/>
+    <circle r="34" fill="#d8a12b"/>
+    <circle r="18" fill="#8f2938"/>
+    <circle r="7" fill="#fff8e8"/>
+    <g fill="#2f6e56">
+      <path d="M-74 17c-32 4-45 22-48 45 22-3 40-15 48-45Z"/>
+      <path d="M74 17c32 4 45 22 48 45-22-3-40-15-48-45Z"/>
+      <path d="M-17 74c-4 32-22 45-45 48 3-22 15-40 45-48Z"/>
+      <path d="M17 74c4 32 22 45 45 48-3-22-15-40-45-48Z"/>
+    </g>
+  </g>
+</svg>
