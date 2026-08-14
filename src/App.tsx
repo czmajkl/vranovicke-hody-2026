@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   BookImage,
@@ -26,6 +26,8 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react'
+import { getMe, getUsers, loginUser, logoutUser, registerUser, type ApiUser } from './api'
+import './auth-live.css'
 
 type Screen = 'home' | 'people' | 'chronicle' | 'game' | 'profile'
 type EntryMode = 'welcome' | 'register' | 'login' | 'app'
@@ -118,6 +120,13 @@ const navItems: { id: Screen; label: string; Icon: LucideIcon }[] = [
   { id: 'profile', label: 'Profil', Icon: CircleUserRound },
 ]
 
+function profileFromApi(user: ApiUser): DemoProfile {
+  return {
+    name: user.display_name,
+    note: user.bio || 'Zatím o sobě nic neprozradil.',
+  }
+}
+
 function FolkRosette({ small = false }: { small?: boolean }) {
   return <span className={`folk-rosette${small ? ' small' : ''}`} aria-hidden="true" />
 }
@@ -174,7 +183,7 @@ function WelcomeScreen({ onRegister, onLogin, onDemo }: { onRegister: () => void
         <button className="entry-secondary" type="button" onClick={onLogin}><LogIn size={20} /> Som na hodech!</button>
         <button className="entry-demo" type="button" onClick={onDemo}>Otevřít prototyp bez účtu <ChevronRight size={16} /></button>
       </div>
-      <p className="prototype-warning">Teď je to ještě UI prototyp. Hesla ani profily se na této obrazovce zatím nikam neukládají.</p>
+      <p className="prototype-warning">Registrace a přihlášení už míří na skutečný backend. Demo vstup tu zatím necháváme jako záchranný východ během stavby.</p>
     </section>
   )
 }
@@ -184,11 +193,26 @@ function RegisterScreen({ onBack, onDone }: { onBack: () => void; onDone: (profi
   const [password, setPassword] = useState('')
   const [note, setNote] = useState('')
   const [photoName, setPhotoName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!name.trim() || password.length < 4) return
-    onDone({ name: name.trim(), note: note.trim() || 'Zatím o sobě nic neprozradil.' })
+    if (!name.trim() || password.length < 10 || busy) return
+    setBusy(true)
+    setError('')
+    try {
+      const { user } = await registerUser({
+        name: name.trim(),
+        password,
+        bio: note.trim(),
+      })
+      onDone(profileFromApi(user))
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Profil se nepodařilo vytvořit.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -202,11 +226,12 @@ function RegisterScreen({ onBack, onDone }: { onBack: () => void; onDone: (profi
         <p className="form-intro">Stačí jméno a heslo. Fotka a krátká věta jsou dobrovolné, protože nucené bio je sociální zločin.</p>
 
         <form onSubmit={submit} className="entry-form">
-          <label><span>Jméno nebo přezdívka</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Michael" autoComplete="name" required /></label>
-          <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Aspoň 4 znaky pro prototyp" minLength={4} autoComplete="new-password" required /></div></label>
+          <label><span>Jméno nebo přezdívka</span><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Michael" autoComplete="name" minLength={2} maxLength={40} required /></label>
+          <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Aspoň 10 znaků" minLength={10} maxLength={128} autoComplete="new-password" required /></div></label>
           <label><span>Krátká věta o sobě <em>nepovinné</em></span><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Když mě nenajdeš, jsem asi..." maxLength={120} /></label>
-          <label className="photo-picker"><ImagePlus size={21} /><div><strong>{photoName || 'Přidat profilovou fotku'}</strong><span>nepovinné · zatím jen náhled UI</span></div><input type="file" accept="image/*" onChange={(event) => setPhotoName(event.target.files?.[0]?.name ?? '')} /></label>
-          <button className="entry-primary" type="submit"><PartyPopper size={20} /> Som na hodech!</button>
+          <label className="photo-picker"><ImagePlus size={21} /><div><strong>{photoName || 'Přidat profilovou fotku'}</strong><span>nepovinné · upload zapojíme s R2</span></div><input type="file" accept="image/*" onChange={(event) => setPhotoName(event.target.files?.[0]?.name ?? '')} /></label>
+          {error && <p className="entry-error" role="alert">{error}</p>}
+          <button className="entry-primary" type="submit" disabled={busy}><PartyPopper size={20} /> {busy ? 'Zakládám profil…' : 'Som na hodech!'}</button>
         </form>
       </div>
     </section>
@@ -214,14 +239,53 @@ function RegisterScreen({ onBack, onDone }: { onBack: () => void; onDone: (profi
 }
 
 function LoginScreen({ onBack, onDone }: { onBack: () => void; onDone: (profile: DemoProfile) => void }) {
-  const [selected, setSelected] = useState(people[0].name)
+  const [users, setUsers] = useState<ApiUser[]>([])
+  const [selected, setSelected] = useState('')
   const [password, setPassword] = useState('')
-  const person = people.find((item) => item.name === selected) ?? people[0]
+  const [busy, setBusy] = useState(false)
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [error, setError] = useState('')
 
-  const submit = (event: FormEvent) => {
+  useEffect(() => {
+    let active = true
+    getUsers()
+      .then(({ users: nextUsers }) => {
+        if (!active) return
+        setUsers(nextUsers)
+        setSelected(nextUsers[0]?.display_name ?? '')
+      })
+      .catch((reason) => {
+        if (active) setError(reason instanceof Error ? reason.message : 'Seznam lidí se nepodařilo načíst.')
+      })
+      .finally(() => {
+        if (active) setLoadingUsers(false)
+      })
+    return () => { active = false }
+  }, [])
+
+  const selectedUser = users.find((item) => item.display_name === selected)
+  const selectedPerson: Person | null = selectedUser ? {
+    name: selectedUser.display_name,
+    note: selectedUser.bio || 'Zatím o sobě nic neprozradil.',
+    meetings: 0,
+    achievements: [],
+    accent: 'blue',
+    questions: [],
+  } : null
+
+  const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!password) return
-    onDone({ name: person.name, note: person.note })
+    if (!selected || !password || busy) return
+    setBusy(true)
+    setError('')
+    try {
+      const { user } = await loginUser({ name: selected, password })
+      onDone(profileFromApi(user))
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Přihlášení se nepodařilo.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -235,10 +299,15 @@ function LoginScreen({ onBack, onDone }: { onBack: () => void; onDone: (profile:
         <p className="form-intro">Najdi se v seznamu a zadej heslo. E-mail po tobě opravdu nechceme. Lidstvo už má formulářů dost.</p>
 
         <form onSubmit={submit} className="entry-form">
-          <label><span>Kdo jsi?</span><select value={selected} onChange={(event) => setSelected(event.target.value)}>{people.map((item) => <option key={item.name}>{item.name}</option>)}</select></label>
-          <div className="login-person-preview"><PhotoPlaceholder person={person} /><div><strong>{person.name}</strong><p>{person.note}</p></div></div>
-          <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Tvoje heslo" autoComplete="current-password" required /></div></label>
-          <button className="entry-primary" type="submit"><LogIn size={20} /> Jdu dovnitř</button>
+          {loadingUsers ? <p className="login-empty">Načítám lidi z hodů…</p> : users.length ? (
+            <>
+              <label><span>Kdo jsi?</span><select value={selected} onChange={(event) => setSelected(event.target.value)}>{users.map((item) => <option key={item.id} value={item.display_name}>{item.display_name}</option>)}</select></label>
+              {selectedPerson && <div className="login-person-preview"><PhotoPlaceholder person={selectedPerson} /><div><strong>{selectedPerson.name}</strong><p>{selectedPerson.note}</p></div></div>}
+              <label><span>Heslo</span><div className="input-with-icon"><LockKeyhole size={17} /><input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Tvoje heslo" autoComplete="current-password" required /></div></label>
+            </>
+          ) : <p className="login-empty">Zatím tu není žádný účet. Někdo musí být první, taková je krutá matematika databází.</p>}
+          {error && <p className="entry-error" role="alert">{error}</p>}
+          <button className="entry-primary" type="submit" disabled={busy || loadingUsers || !selected}><LogIn size={20} /> {busy ? 'Přihlašuju…' : 'Jdu dovnitř'}</button>
         </form>
       </div>
     </section>
@@ -369,7 +438,7 @@ function GameScreen() {
   )
 }
 
-function ProfileScreen({ profile, onShowWelcome }: { profile: DemoProfile; onShowWelcome: () => void }) {
+function ProfileScreen({ profile, onLogout }: { profile: DemoProfile; onLogout: () => void }) {
   const [quiet, setQuiet] = useState(false)
   const me: Person = useMemo(() => ({ name: profile.name, note: profile.note, questions: [], meetings: 0, achievements: ['Seznamovač', 'Ještě jednou'], accent: 'wine' }), [profile])
   return (
@@ -379,15 +448,31 @@ function ProfileScreen({ profile, onShowWelcome }: { profile: DemoProfile; onSho
       <button className={`quiet-card${quiet ? ' quiet-on' : ''}`} type="button" onClick={() => setQuiet((current) => !current)}><span className="quiet-icon">{quiet ? <Moon size={22} /> : <PartyPopper size={22} />}</span><div><strong>{quiet ? 'Neotravuj' : 'Som ve hře'}</strong><p>{quiet ? 'Ostatním tě teď náhodně nenabízíme.' : 'Můžeš se objevovat ostatním na hlavní obrazovce.'}</p></div><span className="toggle"><i /></span></button>
       <article className="invite-card"><div className="invite-corner" aria-hidden="true" /><div className="invite-copy"><p className="eyebrow">Přiveď dalšího</p><h2>Pozvi někoho</h2><p>Pošleš stejný vstup do hry. Za hotovou registraci pak pár symbolických bodů.</p><button className="primary-button" type="button"><Share2 size={18} /> Sdílet pozvánku</button></div><div className="qr-placeholder" aria-label="Místo pro budoucí QR kód"><QrCode size={52} /><span>QR</span></div></article>
       <div className="profile-achievements"><h2 className="section-title">Tvoje odznaky</h2><div className="achievement-row large">{me.achievements.map((achievement) => <span key={achievement}><Medal size={15} /> {achievement}</span>)}</div></div>
-      <button className="prototype-reset" type="button" onClick={onShowWelcome}>Znovu ukázat vstupní obrazovku</button>
+      <button className="prototype-reset" type="button" onClick={onLogout}>Odhlásit se</button>
     </section>
   )
 }
 
 function App() {
   const [entryMode, setEntryMode] = useState<EntryMode>('welcome')
+  const [checkingSession, setCheckingSession] = useState(true)
   const [screen, setScreen] = useState<Screen>('home')
   const [profile, setProfile] = useState<DemoProfile>({ name: 'Michael', note: 'Pravděpodobně něco řeším a tvrdím, že už nic řešit nebudu.' })
+
+  useEffect(() => {
+    let active = true
+    getMe()
+      .then(({ user }) => {
+        if (!active || !user) return
+        setProfile(profileFromApi(user))
+        setEntryMode('app')
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setCheckingSession(false)
+      })
+    return () => { active = false }
+  }, [])
 
   const enterApp = (nextProfile?: DemoProfile) => {
     if (nextProfile) setProfile(nextProfile)
@@ -395,6 +480,17 @@ function App() {
     setScreen('home')
   }
 
+  const logout = async () => {
+    try {
+      await logoutUser()
+    } catch {
+      // The UI should still forget the local session state even if the network call fails.
+    }
+    setEntryMode('welcome')
+    setScreen('home')
+  }
+
+  if (checkingSession) return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><div className="app-loading"><FolkRosette /><strong>Vranovické hody</strong><span>Kontroluju, jestli už tě známe…</span></div></main>
   if (entryMode === 'welcome') return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><WelcomeScreen onRegister={() => setEntryMode('register')} onLogin={() => setEntryMode('login')} onDemo={() => enterApp()} /></main>
   if (entryMode === 'register') return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><RegisterScreen onBack={() => setEntryMode('welcome')} onDone={enterApp} /></main>
   if (entryMode === 'login') return <main className="app-shell entry-shell"><div className="folk-background" aria-hidden="true"><span /><span /></div><LoginScreen onBack={() => setEntryMode('welcome')} onDone={enterApp} /></main>
@@ -406,7 +502,7 @@ function App() {
       {screen === 'people' && <PeopleScreen onPick={() => setScreen('home')} />}
       {screen === 'chronicle' && <ChronicleScreen />}
       {screen === 'game' && <GameScreen />}
-      {screen === 'profile' && <ProfileScreen profile={profile} onShowWelcome={() => setEntryMode('welcome')} />}
+      {screen === 'profile' && <ProfileScreen profile={profile} onLogout={logout} />}
       <nav className="bottom-nav" aria-label="Hlavní navigace">
         {navItems.map((item) => <button className={screen === item.id ? 'active' : ''} key={item.id} type="button" onClick={() => setScreen(item.id)}><item.Icon size={19} strokeWidth={2.15} /><span>{item.label}</span></button>)}
       </nav>
