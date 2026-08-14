@@ -6,6 +6,13 @@
   "observability": {
     "enabled": true
   },
+  "secrets": {
+    "required": [
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "GOOGLE_REFRESH_TOKEN"
+    ]
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
