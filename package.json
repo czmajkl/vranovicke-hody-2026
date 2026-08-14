@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run db:migrate && tsc -b && vite build",
     "preview": "vite preview",
     "db:migrate": "wrangler d1 migrations apply DB --remote",
-    "deploy": "npm run db:migrate && wrangler deploy"
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "5.3.0",
