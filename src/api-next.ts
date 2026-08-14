@@ -1,3 +1,5 @@
+import { takePendingMomentArchive, takePendingProfileFile, uploadOriginalPhoto } from './photo-next'
+
 export type Gender = 'male' | 'female'
 export type DanceLevel = 'pro' | 'amateur' | 'wild'
 export type DrinkPreference = 'slivovica' | 'green' | 'dark' | 'anything' | 'none'
@@ -109,7 +111,7 @@ export function getUsers() {
   return request<{ users: ApiUser[] }>('/api/users')
 }
 
-export function registerUser(input: {
+export async function registerUser(input: {
   name: string
   password: string
   bio?: string
@@ -119,10 +121,24 @@ export function registerUser(input: {
   drink_preference: DrinkPreference
   ref?: string
 }) {
-  return request<{ user: ApiUser }>('/api/register', {
+  const registered = await request<{ user: ApiUser }>('/api/register', {
     method: 'POST',
     body: JSON.stringify(input),
   })
+
+  const original = takePendingProfileFile()
+  if (!original) return registered
+
+  try {
+    const archive = await uploadOriginalPhoto(original, 'profile')
+    return await saveProfilePhoto({
+      image_data: input.profile_photo_data,
+      drive_file_id: archive.drive_file_id,
+    })
+  } catch (error) {
+    console.warn('profile_photo_archive_failed', error)
+    return registered
+  }
 }
 
 export function loginUser(input: { name: string; password: string }) {
@@ -165,8 +181,19 @@ export function getChronicle() {
   return request<{ events: ChronicleEvent[] }>('/api/chronicle')
 }
 
-export function saveMomentPhoto(input: { image_data: string; tagged_user_id?: string; interaction_id?: string }) {
-  return request<{ ok: true; photo_id: string }>('/api/photos', {
+export async function saveMomentPhoto(input: { image_data: string; tagged_user_id?: string; interaction_id?: string }) {
+  const archive = await takePendingMomentArchive()
+  return request<{ ok: true; photo_id: string; media_url?: string; archived?: boolean }>('/api/photos', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...input,
+      drive_file_id: archive?.drive_file_id,
+    }),
+  })
+}
+
+export function saveProfilePhoto(input: { image_data: string; drive_file_id?: string }) {
+  return request<{ user: ApiUser }>('/api/me/profile-photo', {
     method: 'POST',
     body: JSON.stringify(input),
   })
