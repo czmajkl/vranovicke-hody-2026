@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vranovicke-hody-2026",
-  "main": "./src/worker-diagnostics.ts",
+  "main": "./src/worker-game.ts",
   "compatibility_date": "2026-08-14",
   "observability": {
     "enabled": true
