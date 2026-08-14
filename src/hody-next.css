@@ -1,0 +1,241 @@
+.v4-registration-facts {
+  grid-template-columns: 1fr 1fr;
+}
+
+.v4-registration-facts .v4-drink-select {
+  grid-column: 1 / -1;
+}
+
+.v4-no-shot-note,
+.v4-shot-blocked,
+.v4-no-panak-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.v4-no-shot-note {
+  margin: -2px 0 4px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(95, 23, 36, .28);
+  border-radius: 14px;
+  background: rgba(255,255,255,.45);
+  color: var(--wine-dark, #5f1724);
+  font-size: .87rem;
+}
+
+.v4-profile-facts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.v4-profile-facts > span {
+  min-width: 0;
+}
+
+.v4-profile-facts > span strong {
+  line-height: 1.12;
+}
+
+.v4-profile-facts .no-shot {
+  border-color: rgba(49,91,119,.24);
+  background: rgba(49,91,119,.08);
+}
+
+.v4-shot-blocked {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 16px;
+  background: rgba(49,91,119,.08);
+  border: 1px solid rgba(49,91,119,.18);
+  font-size: .88rem;
+  color: #315b77;
+}
+
+.v4-no-panak-chip {
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(49,91,119,.08);
+  color: #315b77;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.v4-moment-preview {
+  position: relative;
+  overflow: hidden;
+}
+
+.v4-moment-preview::after {
+  content: 'V KRONICE';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(95,23,36,.88);
+  color: #fff8e8;
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.v4-chronicle-photo {
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(95,23,36,.14);
+  background: #fffaf0;
+  box-shadow: 0 12px 30px rgba(67,39,24,.08);
+}
+
+.v4-chronicle-photo > img {
+  width: 100%;
+  max-height: 520px;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 4 / 3;
+}
+
+.v4-chronicle-photo > div {
+  padding: 15px 17px 18px;
+}
+
+.v4-chronicle-photo span {
+  color: rgba(57,43,35,.55);
+  font-size: .74rem;
+}
+
+.v4-chronicle-photo h2 {
+  margin: 3px 0 4px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.45rem;
+}
+
+.v4-chronicle-photo p {
+  margin: 0;
+  color: rgba(57,43,35,.72);
+}
+
+.v4-profile-editor {
+  display: grid;
+  gap: 13px;
+  margin: 14px 0;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(143,41,56,.18);
+  background: rgba(255,250,240,.93);
+  box-shadow: 0 12px 30px rgba(67,39,24,.07);
+}
+
+.v4-profile-editor h2 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.65rem;
+}
+
+.v4-profile-editor label {
+  display: grid;
+  gap: 6px;
+}
+
+.v4-profile-editor label > span {
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.v4-profile-editor textarea,
+.v4-profile-editor select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(95,23,36,.18);
+  border-radius: 13px;
+  background: rgba(255,255,255,.72);
+  color: inherit;
+  font: inherit;
+  padding: 11px 12px;
+}
+
+.v4-profile-editor textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.v4-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.v4-editor-grid label:last-child {
+  grid-column: 1 / -1;
+}
+
+.v4-profile-gallery {
+  margin-top: 17px;
+  padding: 17px;
+  border-radius: 24px;
+  background: rgba(255,250,240,.82);
+  border: 1px solid rgba(95,23,36,.13);
+}
+
+.v4-gallery-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.v4-gallery-heading h2 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.65rem;
+}
+
+.v4-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.v4-gallery-grid figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 15px;
+  background: rgba(95,23,36,.05);
+}
+
+.v4-gallery-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: block;
+  object-fit: cover;
+}
+
+.v4-gallery-grid figcaption {
+  padding: 6px 7px 8px;
+  font-size: .65rem;
+  text-align: center;
+  color: rgba(57,43,35,.6);
+}
+
+@media (max-width: 620px) {
+  .v4-registration-facts,
+  .v4-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .v4-registration-facts .v4-drink-select,
+  .v4-editor-grid label:last-child {
+    grid-column: auto;
+  }
+
+  .v4-profile-facts,
+  .v4-profile-facts.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .v4-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
