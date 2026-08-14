@@ -1,0 +1,302 @@
+.entry-shell {
+  display: grid;
+  align-items: center;
+  width: min(100%, 680px);
+  padding-bottom: 34px;
+}
+
+.entry-screen {
+  width: 100%;
+  animation: screen-in .24s ease-out;
+}
+
+.entry-poster {
+  position: relative;
+  min-height: 500px;
+  padding: 58px 28px 42px;
+  overflow: hidden;
+  border: 1px solid rgba(100, 27, 43, .34);
+  border-radius: 14px 42px 14px 42px;
+  color: var(--cream);
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(216,161,43,.19), transparent 16rem),
+    linear-gradient(145deg, #651b2b 0%, #8f2938 48%, #a73849 100%);
+  box-shadow: 0 26px 70px rgba(84, 39, 31, .24);
+}
+
+.entry-poster::after {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  pointer-events: none;
+  border: 1px solid rgba(255,248,232,.22);
+  border-radius: 8px 32px 8px 32px;
+}
+
+.entry-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: .13;
+  background: url('./assets/folk/textile-pattern.svg') center / 165px;
+  mix-blend-mode: screen;
+}
+
+.entry-corner {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  z-index: 1;
+  background: url('./assets/folk/corner-bouquet.svg') center / contain no-repeat;
+  filter: drop-shadow(0 8px 15px rgba(39,18,18,.14));
+}
+.entry-corner-a { top: -55px; left: -55px; }
+.entry-corner-b { right: -55px; bottom: -50px; transform: rotate(180deg); }
+
+.entry-rosette,
+.entry-kicker,
+.entry-poster h1,
+.entry-lead,
+.invite-note,
+.entry-ribbons { position: relative; z-index: 2; }
+
+.entry-rosette { margin-bottom: 18px; }
+.entry-rosette .folk-rosette { width: 98px; height: 98px; }
+.entry-kicker {
+  margin: 0 0 8px;
+  color: #ffd77e;
+  font-size: .69rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.entry-poster h1,
+.entry-form-card h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(3.6rem, 15vw, 6rem);
+  font-weight: 700;
+  line-height: .78;
+  letter-spacing: -.055em;
+}
+.entry-lead {
+  max-width: 38ch;
+  margin: 25px auto 0;
+  color: rgba(255,248,232,.9);
+  font-size: .98rem;
+  line-height: 1.55;
+}
+.invite-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px auto 0;
+  border: 1px solid rgba(255,215,126,.34);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: #ffe5a8;
+  background: rgba(62,18,28,.25);
+  font-size: .73rem;
+  font-weight: 800;
+}
+.entry-ribbons {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 30px;
+}
+.entry-ribbons i {
+  display: block;
+  width: 12px;
+  height: 66px;
+  border-radius: 999px 999px 5px 5px;
+  transform-origin: top;
+}
+.entry-ribbons i:nth-child(1) { background: var(--gold); transform: rotate(9deg); }
+.entry-ribbons i:nth-child(2) { background: var(--blue); transform: rotate(4deg); }
+.entry-ribbons i:nth-child(3) { height: 76px; background: var(--cream); }
+.entry-ribbons i:nth-child(4) { background: var(--green); transform: rotate(-4deg); }
+.entry-ribbons i:nth-child(5) { background: var(--pink); transform: rotate(-9deg); }
+
+.entry-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+.entry-primary,
+.entry-secondary,
+.entry-demo,
+.entry-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-weight: 850;
+}
+.entry-primary,
+.entry-secondary {
+  width: 100%;
+  border-radius: 17px;
+  padding: 16px 18px;
+}
+.entry-primary {
+  border: 1px solid var(--wine);
+  color: var(--cream);
+  background: linear-gradient(135deg, #a33a4b, #651b2b);
+  box-shadow: 0 12px 28px rgba(100,27,43,.2);
+}
+.entry-secondary {
+  border: 1px solid rgba(35,94,131,.26);
+  color: var(--blue);
+  background: rgba(255,250,240,.9);
+}
+.entry-demo {
+  border: 0;
+  padding: 11px;
+  color: var(--wine);
+  background: transparent;
+  font-size: .8rem;
+}
+.prototype-warning {
+  max-width: 48ch;
+  margin: 13px auto 0;
+  color: #88776a;
+  text-align: center;
+  font-size: .69rem;
+  line-height: 1.45;
+}
+
+.form-entry { padding-top: 6px; }
+.entry-back {
+  border: 0;
+  margin: 0 0 12px 3px;
+  padding: 9px 4px;
+  color: var(--wine);
+  background: transparent;
+  font-size: .78rem;
+}
+.entry-form-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px 34px 34px 34px;
+  padding: 30px 24px 26px;
+  background: rgba(255,250,240,.95);
+  box-shadow: 0 22px 58px rgba(73,45,29,.12);
+}
+.entry-form-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 9px;
+  background: linear-gradient(90deg, var(--wine) 0 20%, var(--gold) 20% 40%, var(--green) 40% 60%, var(--blue) 60% 80%, var(--pink) 80%);
+}
+.form-ornament {
+  position: absolute;
+  top: -48px;
+  right: -55px;
+  width: 220px;
+  height: 220px;
+  opacity: .13;
+  background: url('./assets/folk/corner-bouquet.svg') center / contain no-repeat;
+  transform: rotate(90deg);
+}
+.entry-form-card > .folk-rosette { position: relative; width: 66px; height: 66px; margin-bottom: 12px; }
+.entry-form-card > .eyebrow,
+.entry-form-card h1,
+.form-intro,
+.entry-form { position: relative; z-index: 1; }
+.entry-form-card h1 { max-width: 7ch; color: var(--ink); font-size: clamp(3.1rem, 13vw, 5.2rem); }
+.form-intro { max-width: 45ch; margin: 18px 0 23px; color: #6d5d51; line-height: 1.5; }
+
+.entry-form { display: grid; gap: 15px; }
+.entry-form label { display: grid; gap: 7px; }
+.entry-form label > span {
+  color: #5f5045;
+  font-size: .73rem;
+  font-weight: 850;
+  letter-spacing: .03em;
+}
+.entry-form label em { color: #9a897b; font-style: normal; font-weight: 650; }
+.entry-form input,
+.entry-form textarea,
+.entry-form select {
+  width: 100%;
+  border: 1px solid rgba(68,47,34,.16);
+  border-radius: 13px;
+  outline: none;
+  padding: 13px 14px;
+  color: var(--ink);
+  background: #fffaf0;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.entry-form textarea { min-height: 92px; resize: vertical; }
+.entry-form input:focus,
+.entry-form textarea:focus,
+.entry-form select:focus { border-color: rgba(35,94,131,.45); box-shadow: 0 0 0 3px rgba(35,94,131,.08); }
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(68,47,34,.16);
+  border-radius: 13px;
+  padding-left: 13px;
+  color: var(--wine);
+  background: #fffaf0;
+}
+.input-with-icon input { border: 0; box-shadow: none !important; }
+
+.photo-picker {
+  display: grid !important;
+  grid-template-columns: 42px 1fr;
+  gap: 11px !important;
+  align-items: center;
+  border: 1px dashed rgba(143,41,56,.3);
+  border-radius: 8px 17px 17px 17px;
+  padding: 13px;
+  color: var(--wine);
+  background: rgba(143,41,56,.045);
+  cursor: pointer;
+}
+.photo-picker > div { display: grid; gap: 2px; }
+.photo-picker strong { color: var(--ink); font-size: .8rem; }
+.photo-picker div span { color: #8a796d; font-size: .66rem; }
+.photo-picker input { display: none; }
+
+.login-person-preview {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 13px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px 17px 17px 17px;
+  background: rgba(248,239,223,.7);
+}
+.login-person-preview .photo-placeholder { min-height: 100px; height: 100%; }
+.login-person-preview .photo-placeholder > span { width: 53px; height: 53px; font-size: 2.3rem; }
+.login-person-preview .photo-placeholder small,
+.login-person-preview .photo-corner { display: none; }
+.login-person-preview > div { padding: 12px 13px 12px 0; }
+.login-person-preview strong { font-family: var(--display); font-size: 1.8rem; }
+.login-person-preview p { margin: 3px 0 0; color: #746357; font-size: .75rem; line-height: 1.35; }
+
+.prototype-reset {
+  width: 100%;
+  margin-top: 18px;
+  border: 0;
+  padding: 11px;
+  color: #8f7d70;
+  background: transparent;
+  font-size: .72rem;
+}
+
+@media (max-width: 480px) {
+  .entry-shell { padding: 14px 14px 28px; }
+  .entry-poster { min-height: 470px; padding: 52px 22px 36px; }
+  .entry-poster h1 { font-size: clamp(3.55rem, 18vw, 5rem); }
+  .entry-corner { width: 175px; height: 175px; }
+  .entry-form-card { padding: 27px 19px 23px; }
+}
