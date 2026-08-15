@@ -2,7 +2,7 @@ export * from './api-v8'
 
 import type { ApiUser } from './api-v8'
 
-export type RelationshipStatus = 'looking' | 'not_looking' | 'taken'
+export type RelationshipStatus = 'looking' | 'fate' | 'third' | 'not_looking' | 'taken'
 
 export type ApiUserV9 = ApiUser & {
   relationship_status: RelationshipStatus
