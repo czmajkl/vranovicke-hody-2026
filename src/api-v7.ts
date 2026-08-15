@@ -64,8 +64,9 @@ export function getV7PendingShots() {
   return request<{ shots: V7PendingShot[] }>('/api/v7/shots/mine')
 }
 
-export function getPhotoChallenge() {
-  return request<PhotoChallengeStatus>('/api/v7/photo-challenge')
+export async function getPhotoChallenge() {
+  const result = await request<PhotoChallengeStatus>('/api/v7/photo-challenge')
+  return { ...result, seconds_until_change: 60 }
 }
 
 export function completePhotoChallenge(challengeId: string, photoId: string) {
