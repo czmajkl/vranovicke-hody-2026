@@ -15,6 +15,7 @@ interface D1PreparedStatement {
 
 interface D1Database {
   prepare(query: string): D1PreparedStatement
+  batch<T = Record<string, unknown>>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>
 }
 
 interface AssetsBinding {
@@ -27,6 +28,7 @@ interface Env extends PhotoStorageEnv {
 }
 
 type RelationshipStatus = 'looking' | 'not_looking' | 'taken'
+type SessionUser = { id: string; display_name?: string }
 const VALID_RELATIONSHIP = new Set<RelationshipStatus>(['looking', 'not_looking', 'taken'])
 
 function json(data: unknown, status = 200, headers?: HeadersInit) {
@@ -60,6 +62,16 @@ function jsonRequest(request: Request, body: Record<string, unknown>) {
     headers,
     body: JSON.stringify(body),
   })
+}
+
+async function currentUser(request: Request, env: Env): Promise<SessionUser | null> {
+  const url = new URL(request.url)
+  url.pathname = '/api/me'
+  url.search = ''
+  const response = await baseWorker.fetch(new Request(url, { method: 'GET', headers: request.headers }), env as never)
+  if (!response.ok) return null
+  const payload = await response.json() as { user?: SessionUser | null }
+  return payload.user ?? null
 }
 
 async function relationshipFor(env: Env, userId: string) {
@@ -119,24 +131,67 @@ async function updateProfile(request: Request, env: Env) {
   const body = await parseBody(request)
   if (!body) return baseWorker.fetch(request, env as never)
   const relationshipStatus = normalizeRelationship(body.relationship_status)
-  const meUrl = new URL(request.url)
-  meUrl.pathname = '/api/me'
-  meUrl.search = ''
-  const meResponse = await baseWorker.fetch(new Request(meUrl, { method: 'GET', headers: request.headers }), env as never)
-  const mePayload = meResponse.ok ? await meResponse.json() as { user?: { id?: string } | null } : null
-
+  const user = await currentUser(request, env)
   const { relationship_status: _ignored, ...baseBody } = body
   const response = await baseWorker.fetch(jsonRequest(request, baseBody), env as never)
-  if (response.ok && mePayload?.user?.id) {
+  if (response.ok && user?.id) {
     try {
       await env.DB.prepare('UPDATE users SET relationship_status = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2')
-        .bind(relationshipStatus, mePayload.user.id)
+        .bind(relationshipStatus, user.id)
         .run()
     } catch (error) {
       console.error('relationship_profile_update_failed', error)
     }
   }
   return response
+}
+
+async function createScoredInteraction(request: Request, env: Env, user: SessionUser) {
+  const body = await parseBody(request)
+  const personId = typeof body?.person_id === 'string' ? body.person_id : ''
+  const rawQuestions = Array.isArray(body?.questions) ? body.questions : []
+  const questions = [...new Set(
+    rawQuestions
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter(Boolean),
+  )].slice(0, 4)
+
+  if (!personId || personId === user.id) return json({ error: 'Sám se sebú sa do Drbů fakt nepočítáš.' }, 400)
+  if (!questions.length) return json({ error: 'Napřed odklikni aspoň jednu otázku.' }, 400)
+
+  const person = await env.DB.prepare('SELECT id FROM users WHERE id = ?1 LIMIT 1')
+    .bind(personId).first<{ id: string }>()
+  if (!person) return json({ error: 'Toho člověka už tu nevidím.' }, 404)
+
+  const previous = await env.DB.prepare(`
+    SELECT COUNT(*) AS count FROM interactions
+    WHERE (user_id = ?1 AND person_id = ?2) OR (user_id = ?2 AND person_id = ?1)
+  `).bind(user.id, personId).first<{ count: number }>()
+
+  const firstMeeting = Number(previous?.count ?? 0) === 0
+  const contactPoints = firstMeeting ? 5 : 2
+  const questionPoints = questions.length
+  const points = contactPoints + questionPoints
+  const interactionId = crypto.randomUUID()
+
+  const statements: D1PreparedStatement[] = [
+    env.DB.prepare('INSERT INTO interactions (id, user_id, person_id, points_awarded) VALUES (?1, ?2, ?3, ?4)')
+      .bind(interactionId, user.id, personId, points),
+    env.DB.prepare('INSERT INTO score_events (id, user_id, event_type, points, source_id) VALUES (?1, ?2, ?3, ?4, ?5)')
+      .bind(crypto.randomUUID(), user.id, firstMeeting ? 'interaction_first' : 'interaction_repeat', points, interactionId),
+    ...questions.map((question) => env.DB.prepare(
+      'INSERT INTO interaction_questions (interaction_id, question_text) VALUES (?1, ?2)',
+    ).bind(interactionId, question)),
+  ]
+
+  await env.DB.batch(statements)
+  return json({
+    ok: true,
+    interaction_id: interactionId,
+    points,
+    breakdown: { contact: contactPoints, questions: questionPoints },
+  }, 201)
 }
 
 export default {
@@ -148,6 +203,11 @@ export default {
       if (request.method === 'GET' && url.pathname === '/api/users') return augmentUsers(request, env)
       if (request.method === 'POST' && url.pathname === '/api/register') return register(request, env)
       if (request.method === 'PATCH' && url.pathname === '/api/me/profile') return updateProfile(request, env)
+      if (request.method === 'POST' && url.pathname === '/api/interactions') {
+        const user = await currentUser(request, env)
+        if (!user) return json({ error: 'Nejsi přihlášený.' }, 401)
+        return createScoredInteraction(request, env, user)
+      }
       return baseWorker.fetch(request, env as never)
     } catch (error) {
       console.error('v9_relationship_failed', error)
