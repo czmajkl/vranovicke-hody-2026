@@ -1,0 +1,28 @@
+{
+  "photo_challenges": [
+    {"id":"novy-clovek","text":"Take a photo with someone you met for the first time today."},
+    {"id":"tri-ksichty","text":"Get three people together and all make exactly the same face."},
+    {"id":"nejvetsi-usmev","text":"Find the biggest smile around and take a photo of it."},
+    {"id":"masle","text":"Photograph the most colourful ribbons or folk-costume detail you can find."},
+    {"id":"muzika","text":"Take a photo with the musicians, or at least get the band into the background."},
+    {"id":"kamaradi","text":"Photograph a group that looks like they have known each other suspiciously long."},
+    {"id":"generace","text":"Get two different generations into one photo."},
+    {"id":"tanecek","text":"Catch someone while they are dancing. Motion blur counts as art."},
+    {"id":"pozdni-prichod","text":"Take a photo with someone who arrived at the festival after you."},
+    {"id":"nejvyssi","text":"Find someone taller than you and take a photo together."},
+    {"id":"stejne-jmeno","text":"Find two people with the same or similar name and photograph them together."},
+    {"id":"cizi-klobouk","text":"Borrow a hat, wreath, or another festival accessory for a photo."},
+    {"id":"ctyri-lidi","text":"Get at least four people into one photo and make sure nobody looks normal."},
+    {"id":"pripitok","text":"Take a photo of a group toast. Non-alcoholic drinks count too; we are not running a distillery audit."},
+    {"id":"tanecni-mistr","text":"Take a photo with someone who claims they can dance. Evidence is not required."},
+    {"id":"dve-leve","text":"Find someone who admits they have two left feet and take a victorious photo together."},
+    {"id":"krojovy-detail","text":"Photograph one detail that would make you recognise this as a Moravian village festival even without a sign."},
+    {"id":"fotobomba","text":"Do a respectable photobomb in your friends' photo, then take a proper one with them."},
+    {"id":"pred-a-po","text":"Photograph a group that looks like they have already had a very long evening."},
+    {"id":"nejvetsi-partak","text":"Photograph the person who is holding the group together the most tonight."},
+    {"id":"ruce","text":"Put at least three hands together like a sports team and take a photo."},
+    {"id":"selfie-retaz","text":"Take a selfie with someone you do not have any photo with yet."},
+    {"id":"pozadi","text":"Take a photo that clearly shows you are actually at the Vranovice festival."},
+    {"id":"nahodny-par","text":"Find two people who just happen to be standing next to each other and give them a formal portrait."}
+  ]
+}
