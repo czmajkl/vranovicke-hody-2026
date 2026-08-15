@@ -12,7 +12,7 @@ export const PHOTO_CHALLENGES: PhotoChallenge[] = [
   { id: 'kamaradi', text: 'Cvakni partu, která sa zná už podezřele dlouho.' },
   { id: 'generace', text: 'Dostaň do jedné fotky dvě různé generace.' },
   { id: 'tanecek', text: 'Cvakni někoho přímo při tanci. Rozmazání sa počítá jako umění.' },
-  { id: 'nejmensi-partak', text: 'Vyfoť sa s nejmladším členem party, kterého zrovna potkáš.' },
+  { id: 'pozdni-prichod', text: 'Vyfoť sa s někým, kdo dorazil na hody až po tobě.' },
   { id: 'nejvyssi', text: 'Najdi někoho, kdo je vyšší než ty, a udělejte společnú fotku.' },
   { id: 'stejne-jmeno', text: 'Najdi dva lidi se stejným nebo podobným ménem a cvakni je spolu.' },
   { id: 'cizi-klobouk', text: 'Půjč si na fotku klobúk, věneček nebo jinú hodovú parádu.' },
