@@ -34,10 +34,12 @@ export type PhotoChallengeStatus = {
 type ApiError = { error?: string }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers)
+  if (init?.body && !headers.has('content-type')) headers.set('content-type', 'application/json')
   const response = await fetch(path, {
-    credentials: 'same-origin',
-    headers: init?.body ? { 'content-type': 'application/json', ...(init.headers ?? {}) } : init?.headers,
     ...init,
+    credentials: 'same-origin',
+    headers,
   })
   const text = await response.text()
   let body: (T & ApiError) | null = null
