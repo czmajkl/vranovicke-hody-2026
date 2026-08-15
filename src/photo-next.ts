@@ -50,8 +50,8 @@ async function compressImage(file: File, maxEdge: number, quality: number, maxOu
       if (output.length <= maxOutputLength) return output
     }
 
-    width = Math.max(480, Math.round(width * 0.82))
-    height = Math.max(480, Math.round(height * 0.82))
+    width = Math.max(1, Math.round(width * 0.82))
+    height = Math.max(1, Math.round(height * 0.82))
   }
 
   const emergency = renderWebp(image, width, height, 0.4)
