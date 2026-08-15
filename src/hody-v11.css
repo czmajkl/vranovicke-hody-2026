@@ -1,0 +1,48 @@
+.v11-language-toggle {
+  position: fixed;
+  z-index: 260;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  border: 1px solid rgba(95, 23, 36, .2);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: #5f1724;
+  background: rgba(255, 250, 240, .95);
+  box-shadow: 0 8px 24px rgba(43, 22, 23, .14);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.v11-language-toggle strong {
+  font-size: .78rem;
+  letter-spacing: .06em;
+}
+
+.v11-en .v11-translatable {
+  font-size: 0 !important;
+}
+
+.v11-en .v11-translatable::after {
+  content: attr(data-v11-en);
+  font-size: var(--v11-font-size, .9rem);
+  line-height: var(--v11-line-height, normal);
+  white-space: normal;
+}
+
+.v11-en button.v11-translatable::after,
+.v11-en .v11-translatable[role='button']::after {
+  display: inline;
+}
+
+@media (max-width: 620px) {
+  .v11-language-toggle {
+    top: max(8px, env(safe-area-inset-top));
+    right: 8px;
+    min-height: 34px;
+    padding: 7px 9px;
+  }
+}
