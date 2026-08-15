@@ -29,10 +29,12 @@ interface Env extends PhotoStorageEnv {
 
 type RelationshipStatus = 'looking' | 'not_looking' | 'taken'
 type SessionUser = { id: string; display_name?: string }
+type PairUser = { id: string; gender: 'male' | 'female' | null; relationship_status: string | null }
 const VALID_RELATIONSHIP = new Set<RelationshipStatus>(['looking', 'not_looking', 'taken'])
 
 function json(data: unknown, status = 200, headers?: HeadersInit) {
   const next = new Headers(headers)
+  next.delete('content-length')
   next.set('content-type', 'application/json; charset=utf-8')
   next.set('cache-control', 'no-store')
   return new Response(JSON.stringify(data), { status, headers: next })
@@ -146,11 +148,18 @@ async function updateProfile(request: Request, env: Env) {
   return response
 }
 
+function spicyAllowed(a: PairUser | undefined, b: PairUser | undefined) {
+  if (!a || !b) return false
+  if (normalizeRelationship(a.relationship_status) !== 'looking' || normalizeRelationship(b.relationship_status) !== 'looking') return false
+  if (!a.gender || !b.gender) return false
+  return !(a.gender === 'male' && b.gender === 'male')
+}
+
 async function createScoredInteraction(request: Request, env: Env, user: SessionUser) {
   const body = await parseBody(request)
   const personId = typeof body?.person_id === 'string' ? body.person_id : ''
   const rawQuestions = Array.isArray(body?.questions) ? body.questions : []
-  const questions = [...new Set(
+  let questions = [...new Set(
     rawQuestions
       .filter((value): value is string => typeof value === 'string')
       .map((value) => value.trim())
@@ -160,9 +169,17 @@ async function createScoredInteraction(request: Request, env: Env, user: Session
   if (!personId || personId === user.id) return json({ error: 'Sám se sebú sa do Drbů fakt nepočítáš.' }, 400)
   if (!questions.length) return json({ error: 'Napřed odklikni aspoň jednu otázku.' }, 400)
 
-  const person = await env.DB.prepare('SELECT id FROM users WHERE id = ?1 LIMIT 1')
-    .bind(personId).first<{ id: string }>()
-  if (!person) return json({ error: 'Toho člověka už tu nevidím.' }, 404)
+  const pairRows = await env.DB.prepare(`
+    SELECT id, gender, relationship_status
+    FROM users
+    WHERE id = ?1 OR id = ?2
+  `).bind(user.id, personId).all<PairUser>()
+  const pair = pairRows.results ?? []
+  const meRow = pair.find((row) => row.id === user.id)
+  const personRow = pair.find((row) => row.id === personId)
+  if (!personRow) return json({ error: 'Toho člověka už tu nevidím.' }, 404)
+
+  if (questions.length > 3 && !spicyAllowed(meRow, personRow)) questions = questions.slice(0, 3)
 
   const previous = await env.DB.prepare(`
     SELECT COUNT(*) AS count FROM interactions
