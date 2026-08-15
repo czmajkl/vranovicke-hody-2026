@@ -27,10 +27,10 @@ interface Env extends PhotoStorageEnv {
   ASSETS: AssetsBinding
 }
 
-type RelationshipStatus = 'looking' | 'not_looking' | 'taken'
+type RelationshipStatus = 'looking' | 'fate' | 'third' | 'not_looking' | 'taken'
 type SessionUser = { id: string; display_name?: string }
 type PairUser = { id: string; gender: 'male' | 'female' | null; relationship_status: string | null }
-const VALID_RELATIONSHIP = new Set<RelationshipStatus>(['looking', 'not_looking', 'taken'])
+const VALID_RELATIONSHIP = new Set<RelationshipStatus>(['looking', 'fate', 'third', 'not_looking', 'taken'])
 
 function json(data: unknown, status = 200, headers?: HeadersInit) {
   const next = new Headers(headers)
@@ -148,11 +148,17 @@ async function updateProfile(request: Request, env: Env) {
   return response
 }
 
+function interestedIn(user: PairUser, otherGender: 'male' | 'female') {
+  const status = normalizeRelationship(user.relationship_status)
+  if (!user.gender || status === 'taken' || status === 'not_looking') return false
+  if (status === 'third') return otherGender === 'female'
+  if (user.gender === 'male') return otherGender === 'female'
+  return otherGender === 'male' || otherGender === 'female'
+}
+
 function spicyAllowed(a: PairUser | undefined, b: PairUser | undefined) {
-  if (!a || !b) return false
-  if (normalizeRelationship(a.relationship_status) !== 'looking' || normalizeRelationship(b.relationship_status) !== 'looking') return false
-  if (!a.gender || !b.gender) return false
-  return !(a.gender === 'male' && b.gender === 'male')
+  if (!a || !b || !a.gender || !b.gender) return false
+  return interestedIn(a, b.gender) && interestedIn(b, a.gender)
 }
 
 async function createScoredInteraction(request: Request, env: Env, user: SessionUser) {
