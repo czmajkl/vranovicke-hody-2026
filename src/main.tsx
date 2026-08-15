@@ -4,7 +4,7 @@ import '@fontsource/cormorant-garamond/400.css'
 import '@fontsource/cormorant-garamond/500.css'
 import '@fontsource/cormorant-garamond/600.css'
 import '@fontsource/cormorant-garamond/700.css'
-import HodyAppV11 from './HodyAppV11'
+import HodyAppV12 from './HodyAppV12'
 import V10CooldownGuard from './V10CooldownGuard'
 import './styles.css'
 import './onboarding.css'
@@ -15,7 +15,7 @@ import './hody-v10-fix.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <HodyAppV11 />
+    <HodyAppV12 />
     <V10CooldownGuard />
   </React.StrictMode>,
 )
