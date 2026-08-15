@@ -1,0 +1,16 @@
+{
+  "questions": [
+    { "id": "smich", "category": "light", "text": "Co tě dokáže spolehlivě rozesmát?" },
+    { "id": "netipnou", "category": "personal", "text": "Co je něco, co o tobě lidi netipnou?" },
+    { "id": "zbytecna-schopnost", "category": "wildcard", "text": "Jakou úplně zbytečnou schopnost bys chtěl perfektně ovládat?" },
+    { "id": "odjet", "category": "light", "text": "Kdybys mohl právě teď někam odjet, kam bys jel?" },
+    { "id": "radost", "category": "personal", "text": "Co ti poslední dobou udělalo fakt radost?" },
+    { "id": "obycejna-radost", "category": "wildcard", "text": "Která úplně obyčejná věc ti dělá větší radost, než by měla?" },
+    { "id": "prekvapive-dobre", "category": "light", "text": "Jaká věc ti jde překvapivě dobře?" },
+    { "id": "chapali-lepe", "category": "deep", "text": "Co bys chtěl, aby o tobě lidi chápali lépe?" },
+    { "id": "vlastni-svatek", "category": "wildcard", "text": "Kdybys měl vlastní svátek, jak by se slavil?" },
+    { "id": "maly-moment", "category": "personal", "text": "Jaký malý moment si z poslední doby fakt pamatuješ?" },
+    { "id": "ovlivnil", "category": "deep", "text": "Který člověk tě v životě nejvíc ovlivnil?" },
+    { "id": "nova-vec", "category": "wildcard", "text": "Kdybys mohl na týden umět jednu novou věc, co by to bylo?" }
+  ]
+}
