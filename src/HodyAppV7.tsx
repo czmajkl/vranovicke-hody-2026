@@ -19,7 +19,7 @@ import { compressMomentPhoto } from './photo-next'
 import './hody-v7.css'
 
 const SKIP_COOLDOWN_KEY = 'hody-skip-cooldown-until-v1'
-const SHOT_EXPLAINED_KEY = 'hody-shot-explained-v1'
+const SHOT_EXPLAINED_KEY = 'hody-shot-v7-explained-v1'
 const SKIP_SECONDS = 3 * 60 + 30
 
 function defaultShotKind(user: ApiUser): ShotKind {
@@ -79,9 +79,10 @@ function ShotPicker({
   )
 }
 
-function PhotoChallengeCard({ status, busy, message, onPhoto }: {
+function PhotoChallengeCard({ status, busy, completedCurrent, message, onPhoto }: {
   status: PhotoChallengeStatus
   busy: boolean
+  completedCurrent: boolean
   message: string
   onPhoto: (event: ChangeEvent<HTMLInputElement>) => void
 }) {
@@ -89,14 +90,14 @@ function PhotoChallengeCard({ status, busy, message, onPhoto }: {
   const remaining = Math.max(0, status.needed - status.completed)
 
   return (
-    <article className={`v7-challenge-card${status.achievement.earned ? ' earned' : ''}`}>
+    <article className={`v7-challenge-card${status.achievement.earned ? ' earned' : ''}${completedCurrent ? ' completed-current' : ''}`}>
       <div className="v7-challenge-top">
-        <div className="v7-challenge-icon">{status.achievement.earned ? <Trophy size={26} /> : <Camera size={26} />}</div>
+        <div className="v7-challenge-icon">{status.achievement.earned ? <Trophy size={26} /> : completedCurrent ? <Check size={26} /> : <Camera size={26} />}</div>
         <div>
           <p className="eyebrow">Foto úkol na túto minutu</p>
-          <h2>{status.achievement.earned ? 'Hodový nezmar' : 'Cvakni to, než sa to přehodí'}</h2>
+          <h2>{status.achievement.earned ? 'Hodový nezmar' : completedCurrent ? 'Toto máš z krku' : 'Cvakni to, než sa to přehodí'}</h2>
         </div>
-        <span className="v7-challenge-time"><Clock3 size={14} /> {status.seconds_until_change}s</span>
+        <span className="v7-challenge-time"><Clock3 size={14} /> {formatCountdown(status.seconds_until_change)}</span>
       </div>
 
       <p className="v7-challenge-text">{status.challenge.text}</p>
@@ -106,8 +107,8 @@ function PhotoChallengeCard({ status, busy, message, onPhoto }: {
             ? <strong>Odznak máš. Teď už fotíš enom pro slávu.</strong>
             : <><strong>{remaining === 1 ? 'Ještě jedna fotka' : `Ještě ${remaining} fotek`} do odznaku „Hodový nezmar“.</strong><span>Počítá sa 12 různých výzev z 24.</span></>}
         </div>
-        <button className="primary-button" type="button" disabled={busy} onClick={() => input.current?.click()}>
-          <Camera size={18} /> {busy ? 'Ukládám důkaz…' : 'Cvaknút výzvu'}
+        <button className="primary-button" type="button" disabled={busy || completedCurrent} onClick={() => input.current?.click()}>
+          {completedCurrent ? <><Check size={18} /> Splněno, počkaj na další</> : <><Camera size={18} /> {busy ? 'Ukládám důkaz…' : 'Cvaknút výzvu'}</>}
         </button>
         <input ref={input} className="v2-hidden-input" type="file" accept="image/*" capture="environment" onChange={onPhoto} />
       </div>
@@ -128,6 +129,7 @@ export default function HodyAppV7() {
   const [now, setNow] = useState(Date.now())
   const [challenge, setChallenge] = useState<PhotoChallengeStatus | null>(null)
   const [challengeBusy, setChallengeBusy] = useState(false)
+  const [challengeDone, setChallengeDone] = useState(false)
   const [challengeMessage, setChallengeMessage] = useState('')
 
   const cooldownRemaining = Math.max(0, Math.ceil((skipUntil - now) / 1000))
@@ -235,7 +237,11 @@ export default function HodyAppV7() {
     const loadChallenge = async () => {
       try {
         const result = await getPhotoChallenge()
-        if (!cancelled) setChallenge(result)
+        if (!cancelled) {
+          setChallenge(result)
+          setChallengeDone(false)
+          setChallengeMessage('')
+        }
       } catch {
         if (!cancelled) setChallenge(null)
       }
@@ -260,7 +266,7 @@ export default function HodyAppV7() {
           badge.textContent = shotKindLabel(shot.shot_kind)
         })
       } catch {
-        // Legacy cards remain usable even if annotation fails.
+        // Staré karty zůstanou použitelné i kdyby štítek druhu panáka selhal.
       }
     }
 
@@ -299,7 +305,7 @@ export default function HodyAppV7() {
   const takeChallengePhoto = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file || !challenge || challengeBusy) return
+    if (!file || !challenge || challengeBusy || challengeDone) return
 
     const challengeId = challenge.challenge.id
     setChallengeBusy(true)
@@ -308,10 +314,17 @@ export default function HodyAppV7() {
       const imageData = await compressMomentPhoto(file)
       const saved = await saveMomentPhoto({ image_data: imageData })
       const result = await completePhotoChallenge(challengeId, saved.photo_id)
+      setChallengeDone(true)
+      setChallenge((current) => current ? {
+        ...current,
+        completed: result.completed,
+        total: result.total,
+        needed: result.needed,
+        achievement: { ...current.achievement, earned: result.achievement_earned },
+      } : current)
       setChallengeMessage(result.achievement_earned
         ? 'Hotovo. Hodový nezmar je tvůj.'
-        : `Zapsané. ${Math.max(0, result.needed - result.completed)} výzev do odznaku.`)
-      setChallenge(await getPhotoChallenge())
+        : 'Zapsané. Další fotoúkol sa ukáže po minutě.')
     } catch (error) {
       setChallengeMessage(error instanceof Error ? error.message : 'Výzvu sa nepodařilo uložit.')
     } finally {
@@ -349,7 +362,13 @@ export default function HodyAppV7() {
       )}
 
       {gameMount && challenge && createPortal(
-        <PhotoChallengeCard status={challenge} busy={challengeBusy} message={challengeMessage} onPhoto={takeChallengePhoto} />,
+        <PhotoChallengeCard
+          status={challenge}
+          busy={challengeBusy}
+          completedCurrent={challengeDone}
+          message={challengeMessage}
+          onPhoto={takeChallengePhoto}
+        />,
         gameMount,
       )}
     </>
