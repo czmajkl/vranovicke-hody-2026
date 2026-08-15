@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, Flame, Heart, Sparkles } from 'lucide-react'
+import { Check, Flame, Heart, Shuffle, Sparkles } from 'lucide-react'
 import HodyAppV8 from './HodyAppV8'
 import spicyData from './data/spicy-questions.json'
 import {
@@ -20,20 +20,27 @@ type SpicyQuestion = {
 const SPICY_QUESTIONS = spicyData.spicy_questions as SpicyQuestion[]
 
 const RELATIONSHIP_OPTIONS: Array<{ value: RelationshipStatus; label: string; copy: string }> = [
-  { value: 'looking', label: 'Chcu sa seznámit', copy: 'Když potkáš kompatibilního člověka se stejným stavem, může padnút aj čtvrtá spicy otázka.' },
-  { value: 'not_looking', label: 'Teď nic nehledám', copy: 'Pokec klidně, ale seznamovací otázky necháme být.' },
-  { value: 'taken', label: 'Su zadaný/á', copy: 'Vztahový radar je vypnutý. Normální otázky jedú dál.' },
+  { value: 'looking', label: 'Tož třeba přeskočí jiskra', copy: 'Jsi otevřený/á seznamování. Když si preference sednú na obou stranách, přihodíme spicy otázku.' },
+  { value: 'fate', label: 'Co sa má stát, to sa stane', copy: 'Nic nehrotíš, ale dveře nezavíráš. Když si sednete, spicy otázka može padnút.' },
+  { value: 'third', label: 'Do trojice všeho dobrého', copy: 'Tahle volba hledá děvčicu. U šohaja aj děvčice. Druhá strana ale mosí být taky otevřená.' },
+  { value: 'not_looking', label: 'Enom na hody, ne na námluvy', copy: 'Pokec, tanec a sranda ano. Seznamovací otázky necháme být.' },
+  { value: 'taken', label: 'Srdce už mám zadané', copy: 'Vztahový radar je vypnutý. Normální otázky jedú dál.' },
 ]
 
 function relationshipLabel(value: RelationshipStatus) {
-  return RELATIONSHIP_OPTIONS.find((item) => item.value === value)?.label ?? 'Teď nic nehledám'
+  return RELATIONSHIP_OPTIONS.find((item) => item.value === value)?.label ?? 'Enom na hody, ne na námluvy'
+}
+
+function interestedIn(user: ApiUserV9, otherGender: 'male' | 'female') {
+  if (!user.gender || user.relationship_status === 'taken' || user.relationship_status === 'not_looking') return false
+  if (user.relationship_status === 'third') return otherGender === 'female'
+  if (user.gender === 'male') return otherGender === 'female'
+  return otherGender === 'male' || otherGender === 'female'
 }
 
 function isSpicyPair(me: ApiUserV9 | null, person: ApiUserV9 | undefined) {
-  if (!me || !person) return false
-  if (me.relationship_status !== 'looking' || person.relationship_status !== 'looking') return false
-  if (!me.gender || !person.gender) return false
-  return !(me.gender === 'male' && person.gender === 'male')
+  if (!me || !person || !me.gender || !person.gender) return false
+  return interestedIn(me, person.gender) && interestedIn(person, me.gender)
 }
 
 function pickSpicy(previous: string) {
@@ -47,10 +54,10 @@ function RelationshipSelect({ value, onChange, compact = false }: {
   onChange: (value: RelationshipStatus) => void
   compact?: boolean
 }) {
-  const selected = RELATIONSHIP_OPTIONS.find((item) => item.value === value) ?? RELATIONSHIP_OPTIONS[1]
+  const selected = RELATIONSHIP_OPTIONS.find((item) => item.value === value) ?? RELATIONSHIP_OPTIONS[3]
   return (
     <label className={`v9-relationship-select${compact ? ' compact' : ''}`}>
-      <span><Heart size={16} /> Jak to máš se seznamováním</span>
+      <span><Heart size={16} /> Jak to máš na hodech se seznamováním</span>
       <select value={value} onChange={(event) => onChange(event.target.value as RelationshipStatus)}>
         {RELATIONSHIP_OPTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
       </select>
@@ -60,7 +67,7 @@ function RelationshipSelect({ value, onChange, compact = false }: {
 }
 
 function RelationshipCard({ value }: { value: RelationshipStatus }) {
-  const selected = RELATIONSHIP_OPTIONS.find((item) => item.value === value) ?? RELATIONSHIP_OPTIONS[1]
+  const selected = RELATIONSHIP_OPTIONS.find((item) => item.value === value) ?? RELATIONSHIP_OPTIONS[3]
   return (
     <div className={`v9-relationship-card ${value}`}>
       <Heart size={20} />
@@ -69,16 +76,18 @@ function RelationshipCard({ value }: { value: RelationshipStatus }) {
   )
 }
 
-function SpicyQuestionCard({ question, selected, onToggle }: {
+function SpicyQuestionCard({ question, selected, onToggle, onShuffle }: {
   question: string
   selected: boolean
   onToggle: () => void
+  onShuffle: () => void
 }) {
   return (
     <article className={`v2-question v9-spicy-question${selected ? ' checked' : ''}`} data-v9-spicy="true">
       <span className="v2-question-number v9-spicy-number">4</span>
       <div className="v9-spicy-copy"><span><Flame size={14} /> SPICY</span><p>{question}</p></div>
       <button type="button" onClick={onToggle}>{selected ? <><Check size={17} /> Tož jo</> : 'Tuhle sme dali'}</button>
+      <button className="v9-question-shuffle" type="button" disabled={selected} onClick={onShuffle}><Shuffle size={15} /> Jinú</button>
     </article>
   )
 }
@@ -304,11 +313,16 @@ export default function HodyAppV9() {
       {profileStatusMount && createPortal(<RelationshipCard value={profileStatus} />, profileStatusMount)}
 
       {spicyMount && spicyQuestion && createPortal(
-        <SpicyQuestionCard question={spicyQuestion} selected={spicySelected} onToggle={() => setSpicySelected((value) => !value)} />,
+        <SpicyQuestionCard
+          question={spicyQuestion}
+          selected={spicySelected}
+          onToggle={() => setSpicySelected((value) => !value)}
+          onShuffle={() => { if (!spicySelected) setSpicyQuestion(pickSpicy(spicyQuestion)) }}
+        />,
         spicyMount,
       )}
 
-      {spicyMount && <div className="v9-spicy-hint"><Sparkles size={14} /> Oba máte „Chcu sa seznámit“, tož přibyla jedna odvážnější.</div>}
+      {spicyMount && <div className="v9-spicy-hint"><Sparkles size={14} /> Preference si sedly, tož přibyla jedna odvážnější.</div>}
     </>
   )
 }
