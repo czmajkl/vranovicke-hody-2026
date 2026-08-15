@@ -150,24 +150,37 @@ export async function uploadOriginalToDrive(
   const stamp = now.toISOString().replace(/[:.]/g, '-').replace('T', '_').replace('Z', '')
   const filename = `${stamp}_${safeFilename(ownerName)}_${purpose}_${crypto.randomUUID().slice(0, 8)}.${suffix}`
   const metadata = { name: filename, parents: [folderId] }
-  const boundary = `hody_${crypto.randomUUID().replace(/-/g, '')}`
-  const prefix = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`
-  const suffixBody = `\r\n--${boundary}--\r\n`
-  const body = new Blob([prefix, file, suffixBody], { type: `multipart/related; boundary=${boundary}` })
+  const contentType = file.type || 'application/octet-stream'
 
-  const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,size', {
+  const startResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType,size', {
     method: 'POST',
     headers: {
       authorization: `Bearer ${accessToken}`,
-      'content-type': `multipart/related; boundary=${boundary}`,
+      'content-type': 'application/json; charset=utf-8',
+      'x-upload-content-type': contentType,
+      'x-upload-content-length': String(file.size),
     },
-    body,
+    body: JSON.stringify(metadata),
   })
-  const payload = await response.json() as { id?: string; name?: string; mimeType?: string; size?: string; error?: unknown }
-  if (!response.ok || !payload.id) {
-    console.error('drive_upload_failed', response.status, payload.error)
+
+  const uploadUrl = startResponse.headers.get('location')
+  if (!startResponse.ok || !uploadUrl) {
+    const detail = await startResponse.text().catch(() => '')
+    console.error('drive_resumable_start_failed', startResponse.status, detail.slice(0, 500))
+    throw new Error('Google Drive nechce začít archivovat originál.')
+  }
+
+  const uploadResponse = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'content-type': contentType },
+    body: file,
+  })
+  const payload = await uploadResponse.json() as { id?: string; name?: string; mimeType?: string; size?: string; error?: unknown }
+  if (!uploadResponse.ok || !payload.id) {
+    console.error('drive_resumable_upload_failed', uploadResponse.status, payload.error)
     throw new Error('Originál sa nepodařilo uložit na Google Drive.')
   }
+
   return {
     driveFileId: payload.id,
     driveName: payload.name ?? filename,
