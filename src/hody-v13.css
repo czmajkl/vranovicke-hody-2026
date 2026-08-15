@@ -1,0 +1,92 @@
+.v13-free-moment {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px 14px;
+  align-items: start;
+  margin: 0 0 14px;
+  border: 1px solid rgba(49, 91, 119, .20);
+  border-radius: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(49,91,119,.09), rgba(255,250,240,.96));
+  box-shadow: 0 10px 26px rgba(67,39,24,.06);
+}
+
+.v13-free-moment-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  color: #fff8e8;
+  background: linear-gradient(145deg, var(--blue, #315b77), var(--wine, #8f2938));
+}
+
+.v13-free-moment-copy span {
+  display: block;
+  color: var(--blue, #315b77);
+  font-size: .67rem;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.v13-free-moment-copy h2 {
+  margin: 2px 0 3px;
+  font-family: var(--display, 'Cormorant Garamond', serif);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.v13-free-moment-copy p {
+  margin: 0;
+  color: rgba(57,43,35,.68);
+  font-size: .77rem;
+  line-height: 1.4;
+}
+
+.v13-free-moment-person,
+.v13-free-moment-button,
+.v13-free-moment-message {
+  grid-column: 1 / -1;
+}
+
+.v13-free-moment-person {
+  display: grid;
+  gap: 6px;
+}
+
+.v13-free-moment-person > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(57,43,35,.72);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.v13-free-moment-person select {
+  width: 100%;
+  border: 1px solid rgba(95,23,36,.16);
+  border-radius: 13px;
+  padding: 10px 11px;
+  color: inherit;
+  background: rgba(255,255,255,.75);
+  font: inherit;
+}
+
+.v13-free-moment-button {
+  justify-content: center;
+}
+
+.v13-free-moment-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  border-radius: 12px;
+  padding: 9px 10px;
+  color: var(--green, #2f6e56);
+  background: rgba(47,110,86,.08);
+  font-size: .74rem;
+  line-height: 1.35;
+}
