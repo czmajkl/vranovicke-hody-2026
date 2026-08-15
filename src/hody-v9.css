@@ -1,0 +1,185 @@
+.v6-drby-actions > .primary-button {
+  display: none !important;
+}
+
+#v9-register-relationship,
+#v9-profile-editor-relationship {
+  grid-column: 1 / -1;
+}
+
+.v9-relationship-select {
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(143, 41, 56, .14);
+  border-radius: 16px;
+  padding: 13px;
+  background: rgba(255, 250, 240, .72);
+}
+
+.v9-relationship-select > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #5f1724;
+  font-weight: 800;
+}
+
+.v9-relationship-select select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(95, 23, 36, .18);
+  border-radius: 12px;
+  padding: 0 11px;
+  background: #fff;
+  color: #382329;
+  font: inherit;
+  font-weight: 700;
+}
+
+.v9-relationship-select small {
+  color: #78655f;
+  line-height: 1.4;
+}
+
+.v9-relationship-card {
+  margin: -4px 0 16px;
+  border: 1px solid rgba(95, 23, 36, .13);
+  border-radius: 18px;
+  padding: 13px 15px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: center;
+  background: #fffaf0;
+  color: #48232a;
+}
+
+.v9-relationship-card.looking {
+  border-color: rgba(143, 41, 56, .28);
+  background: linear-gradient(135deg, #fff2f0, #fffaf0);
+}
+
+.v9-relationship-card > svg {
+  color: #8f2938;
+}
+
+.v9-relationship-card div {
+  display: grid;
+  gap: 2px;
+}
+
+.v9-relationship-card span {
+  color: #8f2938;
+  font-size: .7rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.v9-relationship-card strong {
+  font-size: 1.02rem;
+}
+
+.v9-relationship-card small {
+  color: #76625d;
+  line-height: 1.35;
+}
+
+.v9-relationship-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(95, 23, 36, .07);
+  color: #72575b;
+  font-size: .7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.v9-relationship-chip.looking {
+  background: rgba(143, 41, 56, .11);
+  color: #8f2938;
+}
+
+.v9-relationship-chip.taken {
+  background: rgba(47, 110, 86, .1);
+  color: #2f6e56;
+}
+
+#v9-spicy-question-mount {
+  display: contents;
+}
+
+.v9-spicy-question {
+  position: relative;
+  border-color: rgba(173, 46, 70, .34) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(221, 82, 104, .13), transparent 45%),
+    #fff7f5 !important;
+}
+
+.v9-spicy-question::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(216, 83, 105, .05);
+}
+
+.v9-spicy-question.checked {
+  border-color: #b9304d !important;
+  background: #fff0f1 !important;
+}
+
+.v9-spicy-number {
+  background: #a92743 !important;
+  color: #fff8f4 !important;
+}
+
+.v9-spicy-copy {
+  min-width: 0;
+}
+
+.v9-spicy-copy > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  color: #a92743;
+  font-size: .67rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.v9-spicy-copy p {
+  margin: 0;
+}
+
+.v9-spicy-hint {
+  margin: -4px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #8f2938;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+/* V Drbech je focení součást foto výzvy. Druhé obecné tlačítko už jen mátlo. */
+.v6-drby-actions > input[type="file"]:first-of-type {
+  display: none !important;
+}
+
+@media (max-width: 520px) {
+  .v9-relationship-chip {
+    margin-left: 0;
+    max-width: 100%;
+  }
+
+  .v6-person-name-row {
+    flex-wrap: wrap;
+  }
+}
