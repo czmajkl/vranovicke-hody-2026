@@ -1,0 +1,11 @@
+.v7-first-shot-note p {
+  display: none;
+}
+
+.v7-first-shot-note::after {
+  content: 'Panák druhému člověku vyskočí jako upozornění kdekoliv v appce. Mosí ho přijmút, nebo ho može přehodit dál. Když ho vezme, objeví sa ti ve Hře mezi panákama, které mosíš donést.';
+  display: block;
+  color: #5f5048;
+  font-size: .83rem;
+  line-height: 1.45;
+}
